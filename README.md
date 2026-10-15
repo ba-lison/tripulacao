@@ -10,30 +10,20 @@ A Tripulação é um mod para o Claude Code que mostra, em tempo real, o que cad
 
 ## ✨ O que você vê
 
-**Faixa acima do prompt.** Uma linha por subagente, com:
+### A faixa acima do prompt
+
+<p align="center">
+  <img src="docs/faixa.svg" alt="Faixa da Tripulação com três subagentes: Lupa procurando em hooks, Clawd pensando e Ninja já concluído" width="900">
+</p>
+
+Uma linha por subagente, com:
 
 - o caranguejo do personagem dele, o nome e o modelo;
 - a barra de contexto, os tokens, a porcentagem de contexto e o tempo;
-- a ferramenta que está usando agora, ou o status quando termina;
+- a ferramenta e o alvo em que está mexendo agora, ou o status quando não há ferramenta;
 - um botão **■ Parar** enquanto ele roda, que encerra o subagente pelo `TaskStop`.
 
-Quem termina fica na faixa por alguns segundos e depois sai. O botão **▾ Ocultar** recolhe a faixa até a linha de resumo.
-
-**Rei Clawd ao lado do HUD.** No app, à esquerda do cartão do usage-hud, o Rei Clawd mostra a sessão principal, a partir dos mesmos eventos dos subagentes:
-
-| Rei Clawd | Quando |
-| --- | --- |
-| Patinhas andando no lugar, com faíscas | Uma ferramenta está rodando. |
-| Olhos fechados e nuvem de pensamento | O modelo está respondendo. |
-| Balão amarelo com `?` | Uma pergunta (`AskUserQuestion`) ou um plano espera sua resposta. |
-| Olhos felizes | O turno terminou. |
-| Olhos em X | O turno foi interrompido ou falhou. |
-
-As animações são SVG que o próprio app toca: não chamam o modelo e não gastam token.
-
-Cada subagente ganha um personagem próprio, e o tipo dele escolhe o personagem preferido: `Explore` vira a **Lupa**, `general-purpose` vira o **Clawd**, `code-review` vira o **Ninja**, e assim por diante.
-
-### Estados
+O cabeçalho conta quantos estão ativos e soma os tokens de todos. Quem termina fica na faixa por alguns segundos e depois sai. O botão **▾ Ocultar** recolhe a faixa até a linha de resumo.
 
 | Status | Quando aparece |
 | --- | --- |
@@ -43,13 +33,33 @@ Cada subagente ganha um personagem próprio, e o tipo dele escolhe o personagem 
 | 🟢 Concluído | Devolveu o resultado. |
 | 🔴 Erro | Falhou ou foi interrompido (inclusive pelo botão **■ Parar**). |
 
----
+### O Rei Clawd ao lado do HUD
 
-## 🖼️ Como fica
+<p align="center">
+  <img src="docs/rei.svg" alt="Os sete estados do Rei Clawd: à toa, trabalhando, pensando, esperando sua resposta, aguardando, concluído e interrompido" width="900">
+</p>
 
-**Faixa acima do prompt.** Uma linha por subagente ativo, com a barra de contexto e o status.
+No app, à esquerda do cartão do [usage-hud](https://github.com/ba-lison/usage-hud), o Rei Clawd mostra a sessão principal a partir dos mesmos eventos dos subagentes:
 
-![Faixa acima do prompt com a barra de contexto](docs/faixa.png)
+| Rei Clawd | Quando |
+| --- | --- |
+| Parado, piscando | Nada rodando: a sessão está à toa. |
+| Patinhas andando no lugar, com faíscas | Uma ferramenta está rodando. |
+| Olhos fechados e nuvem de pensamento | O modelo está respondendo. |
+| Balão amarelo com `?` | Uma pergunta (`AskUserQuestion`) ou um plano espera sua resposta. |
+| Olhos fechados, sem nuvem | O turno acabou, mas ainda há trabalho em segundo plano. |
+| Olhos felizes | O turno terminou. |
+| Olhos em X | O turno foi interrompido ou falhou. |
+
+As animações são SVG que o próprio app toca: não chamam o modelo e não gastam token.
+
+### A tripulação
+
+<p align="center">
+  <img src="docs/tripulacao.svg" alt="Os dez personagens da Tripulação, cada um com o tipo de agente que prefere" width="900">
+</p>
+
+Cada subagente ganha um personagem próprio, e o tipo dele escolhe o preferido: `Explore` vira a **Lupa**, `Plan` vira o **Mestre de Obra**, `code-review` vira o **Ninja**, e assim por diante. Se o preferido já estiver ocupado, ou se o tipo não tiver um, o subagente pega um personagem livre, começando pela **Brisa**.
 
 ---
 
@@ -109,6 +119,9 @@ tripulacao/
 │   ├── hooks.json               # aponta para o módulo de hooks
 │   ├── register.tsx             # hooks, faixa e estado
 │   └── crab.ts                  # personagens e desenho dos caranguejos em SVG
+├── docs/
+│   ├── gerar-imagens.mjs        # gera as imagens do README a partir do crab.ts
+│   └── faixa.svg, rei.svg, tripulacao.svg
 ├── types/index.d.ts             # contrato do estado (`$.state`)
 └── tests/crew.test.tsx          # testes do comportamento
 ```
@@ -116,6 +129,7 @@ tripulacao/
 - **Tipos.** Para o editor e o `tsc`, o engine gera a pasta `.claude-plugin/types/` quando o mod carrega. Ela não vai para o repositório, porque pertence ao engine.
 - **Testes.** Rode com `claude plugin test ./tripulacao`.
 - **Validação.** Com o mod carregado, `claude plugin validate ./tripulacao` confere o manifesto e o módulo.
+- **Imagens do README.** São geradas a partir do próprio `crab.ts`, então os caranguejos saem idênticos aos do mod. Para regerar: `node --experimental-strip-types --no-warnings docs/gerar-imagens.mjs` (Node 22 ou mais novo). O layout da faixa é uma cópia do `register.tsx`: se ele mudar, ajuste o script também.
 - **Recarregamento.** Em sessão com recarregamento a quente ativo, cada edição recarrega o mod quando o turno termina.
 
 ---
@@ -126,10 +140,11 @@ Esta pasta é a **única fonte** do mod. O Claude Code lê direto daqui (marketp
 
 1. Edite os arquivos aqui mesmo.
 2. `claude plugin validate .` e `claude plugin test .`
-3. Na sessão aberta, rode `/reload-plugins` ou reinicie a sessão. Não precisa subir versão nem reinstalar.
-4. Confira com `claude plugin list`: `tripulacao@tripulacao` deve aparecer com `Read from:` apontando para esta pasta.
-5. Para publicar: suba `version` em `.claude-plugin/plugin.json` (só quando o código muda; mudança só no README não precisa), faça o commit e o `git push`. Quem instalou pelo GitHub atualiza com `claude plugin update tripulacao@tripulacao`.
-6. Confira com `git status` que não sobrou nada fora do commit e que a branch está igual à `origin/main`.
+3. Se mudou o desenho, a faixa ou os estados, regere as imagens com `node --experimental-strip-types --no-warnings docs/gerar-imagens.mjs`.
+4. Na sessão aberta, rode `/reload-plugins` ou reinicie a sessão. Não precisa subir versão nem reinstalar.
+5. Confira com `claude plugin list`: `tripulacao@tripulacao` deve aparecer com `Read from:` apontando para esta pasta.
+6. Para publicar: suba `version` em `.claude-plugin/plugin.json` (só quando o código muda; mudança só no README não precisa), faça o commit e o `git push`. Quem instalou pelo GitHub atualiza com `claude plugin update tripulacao@tripulacao`.
+7. Confira com `git status` que não sobrou nada fora do commit e que a branch está igual à `origin/main`.
 
 Não copie esta pasta para `~/.claude/skills` nem crie atalho/junction: o mod carregaria duas vezes ou falharia com "Path escapes plugin directory".
 
