@@ -1,4 +1,4 @@
-// The Tripulação state contract: the crew the pane and the band draw from.
+// The Tripulação state contract: the crew the band draws from.
 // Held by the session in $.state; each session keeps its own crew.
 
 // `waiting`: its turn ended, but it holds on background work and resumes under the same id.
@@ -35,16 +35,18 @@ export type CrewMember = {
   log: CrewLog[]
 }
 
+// The main session, drawn as the Rei Clawd beside the HUD: the crew's statuses, plus
+// `idle` before its first turn and `asking` while a question or a plan waits on the person.
+export type BossStatus = CrewStatus | 'idle' | 'asking'
+
 declare module 'claude-code' {
   interface PluginState {
     tripulacao: {
       crew: CrewMember[]
       now: number
-      // Ids of the cards whose tool history is unfolded in the pane.
-      unfolded: string[]
-      // The pane and the band, each folded to its compact form or open in full.
-      paneFolded: boolean
+      // The band folded to its header line, or open with a row per subagent.
       bandFolded: boolean
+      boss: BossStatus
     }
   }
 }

@@ -66,14 +66,15 @@ const row = (y: number, x1: number, x2: number, c: string) => {
 }
 const pts = (l: readonly (readonly [number, number])[], c: string) => l.map(([x, y]) => R(x, y, c)).join('')
 
-function body(C: string): string {
+// `shine` lights its top-left corner; the king goes without, since at 3px a cell it reads as a raised brow.
+function body(C: string, shine = true): string {
   const D = shade(C, -0.3)
   const L = shade(C, 0.28)
   let s = ''
   for (let y = 5; y <= 7; y++) s += row(y, 5, 12, C)
   for (let y = 8; y <= 9; y++) s += row(y, 3, 14, C)
   s += row(10, 5, 12, C) + row(11, 5, 12, D)
-  return s + R(5, 5, L) + R(6, 5, L) + R(3, 8, L) + R(3, 9, D) + R(14, 9, D)
+  return s + (shine ? R(5, 5, L) + R(6, 5, L) : '') + R(3, 8, L) + R(3, 9, D) + R(14, 9, D)
 }
 
 export type Eyes = 'normal' | 'happy' | 'closed' | 'x'
@@ -81,7 +82,7 @@ export type Eyes = 'normal' | 'happy' | 'closed' | 'x'
 const EYE = '#141416'
 const EYES: Record<Eyes, readonly (readonly [number, number])[]> = {
   normal: [[6, 6], [6, 7], [11, 6], [11, 7]],
-  happy: [[6, 6], [5, 7], [7, 7], [11, 6], [10, 7], [12, 7]],
+  happy: [[7, 6], [6, 7], [8, 7], [10, 6], [9, 7], [11, 7]],
   closed: [[5, 7], [6, 7], [7, 7], [10, 7], [11, 7], [12, 7]],
   x: [[5, 6], [7, 6], [6, 7], [10, 6], [12, 6], [11, 7]],
 }
@@ -131,9 +132,8 @@ function acc(a: string | null): string {
       return row(3, 6, 11, Kh) + row(4, 4, 13, Kd) + R(15, 4, Ring) + R(14, 5, Ring) + R(16, 5, Ring) + R(15, 6, Ring) + R(15, 5, Lens) + R(14, 7, Hd)
     }
     case 'coroa': {
-      const G = '#ffd34d', Gd = '#d9a521', Rb = '#e5484d', M = '#4a2c1d', Ml = '#6e4430'
-      return R(6, 2, G) + R(8, 2, G) + R(9, 2, G) + R(11, 2, G) + row(3, 6, 11, G) + row(4, 6, 11, Gd) + R(8, 3, Rb) + R(9, 3, Rb) +
-        row(9, 6, 11, M) + R(8, 9, Ml) + R(9, 9, Ml) + R(5, 10, M) + R(12, 10, M) + R(6, 10, M) + R(11, 10, M)
+      const G = '#ffd34d', Gd = '#d9a521', Rb = '#e5484d'
+      return R(6, 2, G) + R(8, 2, G) + R(9, 2, G) + R(11, 2, G) + row(3, 6, 11, G) + row(4, 6, 11, Gd) + R(8, 3, Rb) + R(9, 3, Rb)
     }
     default:
       return ''
@@ -150,12 +150,72 @@ export function crab(c: Char, x: number, y: number, scale: number, isWalking: bo
   const bob = isWalking ? `<animateTransform attributeName="transform" type="translate" values="0 0;0 -.5" ${STEP}/>` : ''
   return [
     `<g transform="translate(${x} ${y}) scale(${scale})" shape-rendering="crispEdges"><g>`,
-    body(c.color),
+    body(c.color, c.acc !== 'coroa'),
     `<g>${pts(EYES[eyes], EYE)}${blink}</g>`,
     legsA,
     legsB,
     acc(c.acc),
     bob,
     '</g></g>',
+  ].join('')
+}
+
+/* ---------------- the king beside the HUD card ---------------- */
+
+// What hovers by the Rei Clawd: a thought cloud, a question balloon, or work sparks.
+export type Aside = 'thought' | 'question' | 'sparks' | null
+
+// 3px a cell: the crab fills x 2..38, y 12..48; the corner above its right shoulder holds the aside.
+export const SCENE = { width: 50, height: 50 } as const
+
+const BUBBLE = '#26262a'
+const BUBBLE_EDGE = '#4a4a50'
+
+function thought(): string {
+  const dot = (cx: number, begin: string) =>
+    `<circle cx="${cx}" cy="8" r="1.2" fill="#c9c9cf" opacity=".25"><animate attributeName="opacity" values=".25;1;.25" dur="1.2s" begin="${begin}" repeatCount="indefinite"/></circle>`
+  const puff = (cx: number, cy: number, r: number, begin: string) =>
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${BUBBLE}" stroke="${BUBBLE_EDGE}"><animate attributeName="opacity" values=".4;1;.4" dur="1.8s" begin="${begin}" repeatCount="indefinite"/></circle>`
+  return [
+    puff(33.5, 19.5, 1.3, '0s'),
+    puff(35.5, 15.5, 1.8, '.3s'),
+    `<g><ellipse cx="42" cy="8" rx="7.5" ry="6" fill="${BUBBLE}" stroke="${BUBBLE_EDGE}"/>`,
+    dot(39, '0s'),
+    dot(42, '.2s'),
+    dot(45, '.4s'),
+    '<animateTransform attributeName="transform" type="translate" values="0 0;0 -1;0 0" dur="2.4s" repeatCount="indefinite"/></g>',
+  ].join('')
+}
+
+function question(): string {
+  const A = '#e0b04a'
+  return [
+    `<rect x="34" y="0" width="16" height="14" rx="4" fill="${A}"/>`,
+    `<path d="M36 13 L32 18 L41 13 Z" fill="${A}"/>`,
+    `<text x="42" y="7" text-anchor="middle" dominant-baseline="central" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="700" fill="#151517">?`,
+    '<animateTransform attributeName="transform" type="translate" values="0 0;0 -1.5;0 0" dur=".9s" repeatCount="indefinite"/></text>',
+  ].join('')
+}
+
+function sparks(): string {
+  const spark = (x: number, y: number, dx: number, begin: string) =>
+    `<rect x="${x}" y="${y}" width="2" height="2" fill="#ffd34d" opacity="0">` +
+    `<animate attributeName="opacity" values="0;1;0" dur=".9s" begin="${begin}" repeatCount="indefinite"/>` +
+    `<animateTransform attributeName="transform" type="translate" values="0 0;${dx} -8" dur=".9s" begin="${begin}" repeatCount="indefinite"/></rect>`
+  return spark(40, 36, 5, '0s') + spark(38, 40, 6, '.3s') + spark(0, 38, -2, '.6s') + spark(41, 30, 3, '.45s')
+}
+
+// The Rei Clawd in place, 3px a cell: walking it shuffles side to side, otherwise it breathes.
+// SVG the app plays by itself: no animation here costs a token.
+export function kingScene(isWalking: boolean, eyes: Eyes, aside: Aside): string {
+  const sway = isWalking
+    ? '<animateTransform attributeName="transform" type="translate" values="0 0;1.5 0;0 0;-1.5 0;0 0" dur=".64s" repeatCount="indefinite"/>'
+    : '<animateTransform attributeName="transform" type="translate" values="0 0;0 -.8;0 0" dur="2.6s" repeatCount="indefinite"/>'
+  const extra = aside === 'thought' ? thought() : aside === 'question' ? question() : aside === 'sparks' ? sparks() : ''
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${SCENE.width}" height="${SCENE.height}" viewBox="0 0 ${SCENE.width} ${SCENE.height}" overflow="hidden">`,
+    `<g>${crab(BOSS, -7, 6, 3, isWalking, eyes)}${sway}</g>`,
+    extra,
+    '</svg>',
   ].join('')
 }

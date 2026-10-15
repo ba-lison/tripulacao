@@ -1,7 +1,7 @@
 {
   "name": "tripulacao",
-  "version": "0.1.0",
-  "description": "Painel lateral e faixa acima do prompt que mostram cada subagente como um caranguejinho: o que está fazendo, modelo, tokens, contexto e tempo.",
+  "version": "0.2.5",
+  "description": "Faixa acima do prompt que mostra cada subagente como um caranguejinho: o que está fazendo, modelo, tokens, contexto e tempo.",
   "author": { "name": "Alison Cruz" },
   "license": "MIT",
   "types": "./types/index.d.ts"

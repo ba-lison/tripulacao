@@ -10,16 +10,26 @@ A Tripulação é um mod para o Claude Code que mostra, em tempo real, o que cad
 
 ## ✨ O que você vê
 
-**Faixa acima do prompt.** Uma linha por subagente ativo, com o caranguejo, o nome, o modelo, a barra de contexto, os tokens, a porcentagem de contexto, o tempo e a ação atual.
+**Faixa acima do prompt.** Uma linha por subagente, com:
 
-**Painel lateral.** Um cartão por subagente, com:
+- o caranguejo do personagem dele, o nome e o modelo;
+- a barra de contexto, os tokens, a porcentagem de contexto e o tempo;
+- a ferramenta que está usando agora, ou o status quando termina;
+- um botão **■ Parar** enquanto ele roda, que encerra o subagente pelo `TaskStop`.
 
-- o caranguejo do personagem dele, com as patinhas andando enquanto trabalha;
-- o tipo do agente (`general`, `review`, `guide`…) e o modelo;
-- um selo de status: **Trabalhando**, **Pensando**, **Aguardando**, **Concluído** ou **Erro**;
-- a tarefa que recebeu e a ferramenta que está usando agora;
-- métricas de tokens, contexto, tempo e número de ferramentas;
-- o histórico das últimas ferramentas chamadas, que abre e fecha.
+Quem termina fica na faixa por alguns segundos e depois sai. O botão **▾ Ocultar** recolhe a faixa até a linha de resumo.
+
+**Rei Clawd ao lado do HUD.** No app, à esquerda do cartão do usage-hud, o Rei Clawd mostra a sessão principal, a partir dos mesmos eventos dos subagentes:
+
+| Rei Clawd | Quando |
+| --- | --- |
+| Patinhas andando no lugar, com faíscas | Uma ferramenta está rodando. |
+| Olhos fechados e nuvem de pensamento | O modelo está respondendo. |
+| Balão amarelo com `?` | Uma pergunta (`AskUserQuestion`) ou um plano espera sua resposta. |
+| Olhos felizes | O turno terminou. |
+| Olhos em X | O turno foi interrompido ou falhou. |
+
+As animações são SVG que o próprio app toca: não chamam o modelo e não gastam token.
 
 Cada subagente ganha um personagem próprio, e o tipo dele escolhe o personagem preferido: `Explore` vira a **Lupa**, `general-purpose` vira o **Clawd**, `code-review` vira o **Ninja**, e assim por diante.
 
@@ -31,15 +41,11 @@ Cada subagente ganha um personagem próprio, e o tipo dele escolhe o personagem 
 | 🔵 Pensando | Aguarda a próxima resposta do modelo. |
 | 🟡 Aguardando | Terminou o turno, mas segue esperando trabalho em segundo plano. Quando retoma, volta sozinho. |
 | 🟢 Concluído | Devolveu o resultado. |
-| 🔴 Erro | Falhou ou foi interrompido. |
+| 🔴 Erro | Falhou ou foi interrompido (inclusive pelo botão **■ Parar**). |
 
 ---
 
 ## 🖼️ Como fica
-
-**Painel lateral.** Um cartão por subagente, com o personagem, o status, a tarefa, as métricas e o histórico.
-
-![Painel lateral com um subagente aguardando trabalho em segundo plano](docs/painel.png)
 
 **Faixa acima do prompt.** Uma linha por subagente ativo, com a barra de contexto e o status.
 
@@ -49,23 +55,27 @@ Cada subagente ganha um personagem próprio, e o tipo dele escolhe o personagem 
 
 ## 🚀 Instalação
 
-Você precisa do Claude Code com suporte a mods.
+Você precisa do Claude Code 2.1.275 ou mais novo. No prompt de uma sessão no terminal, rode:
 
-1. Clone o repositório numa pasta de mods:
+```
+/plugin install tripulacao --marketplace ba-lison/tripulacao
+```
 
-   ```bash
-   git clone https://github.com/ba-lison/tripulacao.git
-   ```
+Responda `y` para adicionar o marketplace e escolha o escopo (o de usuário vem primeiro). O mod já fica ativo na hora.
 
-2. Carregue a pasta na sessão, com `--plugin-dir`:
+A faixa aparece sozinha acima do prompt quando o primeiro subagente começa.
 
-   ```bash
-   claude --plugin-dir ./tripulacao
-   ```
+### Rodando a partir do código
 
-3. Abra o painel com o comando `/tripulacao`. Ele também se abre sozinho quando o primeiro subagente começa.
+Para mexer no mod, clone o repositório e carregue a pasta na sessão:
 
-> Dica: o painel fica vazio até a primeira chamada de subagente, e isso é esperado.
+```bash
+git clone https://github.com/ba-lison/tripulacao.git
+```
+
+```bash
+claude --plugin-dir ./tripulacao
+```
 
 ---
 
@@ -75,12 +85,14 @@ O mod escuta os eventos do engine e guarda o estado dos subagentes na sessão:
 
 | Evento | O que o mod faz |
 | --- | --- |
-| `agent.spawn` | Cria o caranguejo do subagente e abre o painel. |
+| `agent.spawn` | Cria o caranguejo do subagente na faixa. |
 | `turn.step` | Marca o subagente como "Pensando" e atualiza os tokens com o uso da resposta. |
-| `tool.call` | Marca "Trabalhando", mostra a ferramenta e o alvo, e guarda no histórico. |
+| `tool.call` | Marca "Trabalhando" e mostra a ferramenta e o alvo. |
 | `turn.complete` | Marca "Concluído", "Erro" ou "Aguardando", conforme o motivo e o status do agente. |
 
 Um subagente em segundo plano termina o turno enquanto espera outro trabalho e retoma sob o mesmo id. Por isso o mod só dá o subagente como concluído quando ele realmente terminou, e não no primeiro turno que acaba.
+
+O mod só observa: se a contabilidade dele falhar, o subagente e a ferramenta seguem normalmente, sem bloqueio. A única ação dele é o botão **■ Parar**, que chama o `TaskStop` com o id do subagente. Se a parada falhar, um aviso explica o motivo.
 
 ---
 
@@ -90,13 +102,15 @@ Estrutura do repositório:
 
 ```
 tripulacao/
-├── .claude-plugin/plugin.json   # manifesto do mod
+├── .claude-plugin/
+│   ├── plugin.json              # manifesto do mod
+│   └── marketplace.json         # permite instalar com /plugin install
 ├── hooks/
 │   ├── hooks.json               # aponta para o módulo de hooks
-│   ├── register.tsx             # hooks, faixa, painel e estado
+│   ├── register.tsx             # hooks, faixa e estado
 │   └── crab.ts                  # personagens e desenho dos caranguejos em SVG
 ├── types/index.d.ts             # contrato do estado (`$.state`)
-└── tests/crew.test.ts           # testes do comportamento
+└── tests/crew.test.tsx          # testes do comportamento
 ```
 
 - **Tipos.** Para o editor e o `tsc`, o engine gera a pasta `.claude-plugin/types/` quando o mod carrega. Ela não vai para o repositório, porque pertence ao engine.
@@ -105,6 +119,33 @@ tripulacao/
 - **Recarregamento.** Em sessão com recarregamento a quente ativo, cada edição recarrega o mod quando o turno termina.
 
 ---
+
+## ✅ Checklist: editar e publicar
+
+Esta pasta é a **única fonte** do mod. O Claude Code lê direto daqui (marketplace de pasta local `tripulacao`), sem cópia no meio.
+
+1. Edite os arquivos aqui mesmo.
+2. `claude plugin validate .` e `claude plugin test .`
+3. Na sessão aberta, rode `/reload-plugins` ou reinicie a sessão. Não precisa subir versão nem reinstalar.
+4. Confira com `claude plugin list`: `tripulacao@tripulacao` deve aparecer com `Read from:` apontando para esta pasta.
+5. Para publicar: suba `version` em `.claude-plugin/plugin.json` (só quando o código muda; mudança só no README não precisa), faça o commit e o `git push`. Quem instalou pelo GitHub atualiza com `claude plugin update tripulacao@tripulacao`.
+6. Confira com `git status` que não sobrou nada fora do commit e que a branch está igual à `origin/main`.
+
+Não copie esta pasta para `~/.claude/skills` nem crie atalho/junction: o mod carregaria duas vezes ou falharia com "Path escapes plugin directory".
+
+### Se o mod sumir ou parar de atualizar
+
+Rode `claude plugin list`. Se `tripulacao@tripulacao` não aparecer, ou se `Read from:` apontar para `plugins/cache` em vez desta pasta, instale de novo a partir da pasta:
+
+```bash
+claude plugin marketplace add "E:\Users\aliso\Documents\.Projetos\tripulacao"
+```
+
+```bash
+claude plugin install tripulacao@tripulacao --scope user
+```
+
+Depois, `/reload-plugins` na sessão aberta.
 
 ## 👩‍💻 Autora
 

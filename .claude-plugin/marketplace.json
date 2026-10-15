@@ -1,0 +1,6 @@
+{
+  "name": "tripulacao",
+  "description": "A Tripulação: cada subagente do Claude Code como um caranguejinho, num painel e numa faixa acima do prompt.",
+  "owner": { "name": "Alison Cruz" },
+  "plugins": [{ "name": "tripulacao", "source": "./" }]
+}
