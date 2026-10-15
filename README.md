@@ -35,6 +35,18 @@ Cada subagente ganha um personagem próprio, e o tipo dele escolhe o personagem 
 
 ---
 
+## 🖼️ Como fica
+
+**Painel lateral.** Um cartão por subagente, com o personagem, o status, a tarefa, as métricas e o histórico.
+
+![Painel lateral com um subagente aguardando trabalho em segundo plano](docs/painel.png)
+
+**Faixa acima do prompt.** Uma linha por subagente ativo, com a barra de contexto e o status.
+
+![Faixa acima do prompt com a barra de contexto](docs/faixa.png)
+
+---
+
 ## 🚀 Instalação
 
 Você precisa do Claude Code com suporte a mods.
