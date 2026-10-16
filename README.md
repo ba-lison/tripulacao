@@ -1,171 +1,258 @@
-# 🦀 Tripulação
+<div align="center">
 
-**Acompanhe cada subagente do Claude Code como um caranguejinho.**
+# tripulação
 
-A Tripulação é um mod para o Claude Code que mostra, em tempo real, o que cada subagente da sessão está fazendo: em qual passo está, qual modelo usa, quantos tokens já gastou, quanto do contexto ocupou e há quanto tempo está rodando.
+### Veja cada subagente do Claude Code trabalhando: o que ele está fazendo, quanto da tarefa já andou, quanto contexto usou e há quanto tempo está rodando.
 
-[![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-e07a5f.svg)](LICENSE)
-
----
-
-## ✨ O que você vê
-
-### A faixa acima do prompt
-
-<p align="center">
-  <img src="docs/faixa.svg" alt="Faixa da Tripulação com três subagentes: Lupa procurando em hooks, Clawd pensando e Ninja já concluído" width="900">
+<p>
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-mod-d97757?style=for-the-badge&labelColor=151517">
+  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-2.0.4-2a78d6?style=for-the-badge&labelColor=151517">
+  <img alt="Idioma" src="https://img.shields.io/badge/idioma-PT--BR-e07a5f?style=for-the-badge&labelColor=151517">
+  <img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-a1a1a6?style=for-the-badge&labelColor=151517">
 </p>
 
-Uma linha por subagente, com:
+<img src="assets/faixa-subagentes.svg" alt="A faixa da Tripulação acima do campo de mensagem, logo abaixo do usage-hud: quatro subagentes, cada um com o seu Clawd, o tipo, o modelo, a barra de tarefa, a porcentagem, os tokens contra a janela, o tempo, o que está fazendo e o botão Parar" width="900">
 
-- o caranguejo do personagem dele, o nome e o modelo;
-- a barra de contexto, os tokens, a porcentagem de contexto e o tempo;
-- a ferramenta e o alvo em que está mexendo agora, ou o status quando não há ferramenta;
-- um botão **■ Parar** enquanto ele roda, que encerra o subagente pelo `TaskStop`.
+<br>
 
-O cabeçalho conta quantos estão ativos e soma os tokens de todos. Quem termina fica na faixa por alguns segundos e depois sai. O botão **▾ Ocultar** recolhe a faixa até a linha de resumo.
+**🦀 Um Clawd por subagente · 📊 Progresso da tarefa · 🧠 Tokens contra a janela · ⏱️ Tempo · ■ Parar**
 
-| Status | Quando aparece |
-| --- | --- |
-| 🟠 Trabalhando | Está executando uma ferramenta. |
-| 🔵 Pensando | Aguarda a próxima resposta do modelo. |
-| 🟡 Aguardando | Terminou o turno, mas segue esperando trabalho em segundo plano. Quando retoma, volta sozinho. |
-| 🟢 Concluído | Devolveu o resultado. |
-| 🔴 Erro | Falhou ou foi interrompido (inclusive pelo botão **■ Parar**). |
+</div>
 
-### O Rei Clawd ao lado do HUD
+<br>
 
-<p align="center">
-  <img src="docs/rei.svg" alt="Os sete estados do Rei Clawd: à toa, trabalhando, pensando, esperando sua resposta, aguardando, concluído e interrompido" width="900">
-</p>
+## Por que usar
 
-No app, à esquerda do cartão do [usage-hud](https://github.com/ba-lison/usage-hud), o Rei Clawd mostra a sessão principal a partir dos mesmos eventos dos subagentes:
+Quando o Claude lança subagentes, eles rodam fora da sua vista. Você vê que algo começou, mas não sabe se cada um está lendo, editando, pensando ou travado, quanto da tarefa já fez nem quanto contexto está gastando.
 
-| Rei Clawd | Quando |
-| --- | --- |
-| Parado, piscando | Nada rodando: a sessão está à toa. |
-| Patinhas andando no lugar, com faíscas | Uma ferramenta está rodando. |
-| Olhos fechados e nuvem de pensamento | O modelo está respondendo. |
-| Balão amarelo com `?` | Uma pergunta (`AskUserQuestion`) ou um plano espera sua resposta. |
-| Olhos fechados, sem nuvem | O turno acabou, mas ainda há trabalho em segundo plano. |
-| Olhos felizes | O turno terminou. |
-| Olhos em X | O turno foi interrompido ou falhou. |
+A **tripulação** mostra isso numa faixa logo acima de onde você digita:
 
-As animações são SVG que o próprio app toca: não chamam o modelo e não gastam token.
+- Cada subagente ganha um **Clawd**, e a pose dele mostra o que o subagente está fazendo agora.
+- A **barra de tarefa** acompanha a lista de tarefas do subagente, item por item.
+- Os **tokens** aparecem contra a **janela de contexto real** do modelo daquele subagente.
+- O botão **■ Parar** encerra um subagente sem parar a sessão.
 
-### A tripulação
+<br>
 
-<p align="center">
-  <img src="docs/tripulacao.svg" alt="Os dez personagens da Tripulação, cada um com o tipo de agente que prefere" width="900">
-</p>
+## 🦀 A faixa, coluna por coluna
 
-Cada subagente ganha um personagem próprio, e o tipo dele escolhe o preferido: `Explore` vira a **Lupa**, `Plan` vira o **Mestre de Obra**, `code-review` vira o **Ninja**, e assim por diante. Se o preferido já estiver ocupado, ou se o tipo não tiver um, o subagente pega um personagem livre, começando pela **Brisa**.
+Cada subagente vira uma linha. Da esquerda para a direita:
 
----
+| Coluna | Exemplo | O que mostra |
+|---|---|---|
+| Clawd | 🦀 | A pose do que o subagente está fazendo agora (veja as poses abaixo) |
+| Tipo | `Explore` | O tipo de agente. Nomes longos encurtam: `general-purpose` vira `general`, `code-review` vira `review` |
+| Modelo | `Haiku 5.5` | O modelo em que o subagente roda, no laranja do Claude |
+| Barra | ━━━━🦀── | O progresso da tarefa, com um mini Clawd andando na ponta. Ele pula enquanto o subagente trabalha |
+| % | `63%` | A mesma porcentagem em número, ou `—` quando o subagente não tem lista |
+| Tokens | `41k / 1M` | O contexto que o subagente já ocupa, contra a janela do modelo dele |
+| Tempo | `01:12` | Há quanto tempo ele está rodando. Ao terminar, o relógio para |
+| Atividade | `Grep "checkout" em src` | A ferramenta e o alvo: o arquivo, o comando, o padrão ou o site |
+| Parar | `■ Parar` | Encerra só aquele subagente. Some quando ele termina |
 
-## 🚀 Instalação
+O **cabeçalho** conta quantos subagentes estão ativos e soma os tokens de todos. Quem termina fica na faixa por 6 segundos, com a última linha visível, e depois sai. A faixa só aparece quando existe pelo menos um subagente.
 
-Você precisa do Claude Code 2.1.275 ou mais novo. No prompt de uma sessão no terminal, rode:
+### Ocultar e mostrar
+
+<div align="center">
+  <img src="assets/faixa-oculta.svg" alt="A faixa aberta com o botão Ocultar à direita do cabeçalho, e a faixa oculta mostrando só o cabeçalho com o botão Mostrar" width="900">
+</div>
+
+O botão **▾ Ocultar**, à direita do cabeçalho, recolhe a faixa até a linha de resumo. O botão **▸ Mostrar** abre de novo. A contagem de ativos e de tokens continua aparecendo com a faixa oculta.
+
+<br>
+
+## 📊 Barra de tarefa
+
+<div align="center">
+  <img src="assets/progresso-tarefa.svg" alt="A barra de tarefa de um subagente com uma lista de 4 itens passando por 13, 38, 63, 88 e 100%, e a regra de contagem" width="900">
+</div>
+
+A barra não é um chute: ela lê a **lista de tarefas que o próprio subagente mantém** e avança a cada item.
+
+- Item **concluído** conta 1, item **em andamento** conta meio e item **pendente** conta 0.
+- Com 4 itens, a barra passa por **13%, 38%, 63% e 88%** e só chega a **100%** quando o subagente responde. Até lá ela fica em no máximo 99%, porque ainda falta a resposta.
+- Se o subagente não usa lista, a coluna mostra **`—`** em vez de um 0% enganoso.
+
+A barra entende as três formas de lista que um subagente pode usar: o `update_plan` do app desktop, o `TodoWrite` e o par `TaskCreate` / `TaskUpdate`.
+
+> [!NOTE]
+> No app desktop, o próprio app recusa o `update_plan` dentro de subagentes, porque ele só mostra a lista da conversa principal. Sem isso, a barra travaria na primeira lista. Por isso a tripulação responde essa chamada nos subagentes ("Lista atualizada.") e guarda a lista na faixa. A lista da conversa principal não é tocada.
+
+<br>
+
+## 🧠 Tokens e janela de contexto
+
+A coluna **Tokens** mostra o contexto do subagente depois da última resposta do modelo (entrada, cache e saída juntos), contra a janela do modelo **dele**, não da sessão:
+
+- Se o subagente roda no **mesmo modelo** da sessão, a janela é a que o Claude Code informa.
+- Num **modelo diferente**, a janela é a do modelo: **1M** para todos os modelos atuais (Haiku 5.5, Sonnet 5.5, Opus 5.5, Fable 5.1). Modelos antigos, como o Haiku 4.5, usam **200k**.
+- Um modelo marcado com `[1m]` sempre conta **1M**.
+- O **esforço** (low, medium, high…) não muda a janela.
+
+Se o contexto passar da janela prevista, a coluna sobe para a próxima janela em vez de mostrar mais de 100%.
+
+<br>
+
+## 🎭 As poses do Clawd
+
+<div align="center">
+  <img src="assets/poses-subagente.svg" alt="As poses do Clawd de cada subagente: pensando, lendo, editando, no terminal, na web, orquestrando, trabalhando, esperando você, aguardando, concluído, interrompido e erro, cada uma com o que a liga" width="900">
+</div>
+
+A pose vem dos eventos reais do subagente, não de uma animação aleatória:
+
+| Pose | O que o subagente está fazendo | Evento |
+|---|---|---|
+| Pensando | Esperando a resposta do modelo | `turn.step` |
+| Lendo | Lendo ou procurando arquivos | `tool.call`: Read, Grep, Glob |
+| Editando | Mexendo em código ou arquivos | `tool.call`: Edit, Write, NotebookEdit |
+| No terminal | Rodando comandos | `tool.call`: Bash, PowerShell |
+| Na web | Pesquisando ou abrindo páginas | `tool.call`: WebSearch, WebFetch, navegador |
+| Orquestrando | Lançou ou conversa com outros agentes | `tool.call`: Agent, SendMessage |
+| Trabalhando | Usando qualquer outra ferramenta (MCP, skills…) | `tool.call` |
+| Esperando você | Fez uma pergunta ou mostrou um plano | `tool.call`: AskUserQuestion, ExitPlanMode |
+| Aguardando | Terminou o turno, mas espera trabalho em segundo plano | `turn.complete` com o agente `waiting` |
+| Concluído | Devolveu o resultado | `turn.complete`, `reason: 'answer'` |
+| Interrompido | Você apertou **■ Parar** ou Esc | `turn.complete`, `reason: 'aborted'` |
+| Erro | Falhou | `turn.complete`, outro motivo |
+
+Os Clawds dos subagentes não têm coroa: a coroa fica com o **Rei Clawd** da sessão principal, no [usage-hud](https://github.com/ba-lison/usage-hud). Os dois mods funcionam juntos, mas nenhum depende do outro.
+
+As animações são SVG que o próprio app toca. Elas não chamam o modelo e não gastam token.
+
+<br>
+
+## ■ Parar um subagente
+
+O botão **■ Parar** chama o `TaskStop` com o id daquele subagente, como o Claude faria. A linha mostra "Parando…" e, quando ele para, vira **Interrompido** em vermelho. O resto da sessão e os outros subagentes seguem normalmente. Se a parada falhar, um aviso explica o motivo.
+
+<br>
+
+## 💻 Funciona no app e no terminal
+
+No **app desktop** (aba Code), cada linha tem o Clawd animado e a barra com o mini Clawd. No **terminal**, a faixa vira texto: um `■` no lugar do Clawd e a barra em traços, com as mesmas colunas e os mesmos botões.
+
+<div align="center">
+  <img src="assets/terminal-faixa.svg" alt="A Tripulação no terminal: o cabeçalho com Ocultar e as quatro linhas em texto, com a barra em traços" width="880">
+</div>
+
+<br>
+
+## Instalação
+
+Abra o Claude Code **no terminal** (`claude`) e digite:
 
 ```
 /plugin install tripulacao --marketplace ba-lison/tripulacao
 ```
 
-Responda `y` para adicionar o marketplace e escolha o escopo (o de usuário vem primeiro). O mod já fica ativo na hora.
+1. Responda **`y`** para adicionar o marketplace.
+2. Dê **Enter** no escopo **user**, para valer em todas as sessões.
+3. **Abra uma sessão nova.** Um mod instalado no meio da sessão só aparece na próxima.
 
-A faixa aparece sozinha acima do prompt quando o primeiro subagente começa.
+A faixa aparece sozinha quando o primeiro subagente começa.
 
-### Rodando a partir do código
+> [!NOTE]
+> O comando `/plugin install` só funciona no terminal. Na aba Code do app ele não está disponível, mas a faixa instalada pelo terminal aparece lá normalmente.
 
-Para mexer no mod, clone o repositório e carregue a pasta na sessão:
+<br>
 
-```bash
-git clone https://github.com/ba-lison/tripulacao.git
-```
-
-```bash
-claude --plugin-dir ./tripulacao
-```
-
----
-
-## 🧭 Como funciona
-
-O mod escuta os eventos do engine e guarda o estado dos subagentes na sessão:
-
-| Evento | O que o mod faz |
-| --- | --- |
-| `agent.spawn` | Cria o caranguejo do subagente na faixa. |
-| `turn.step` | Marca o subagente como "Pensando" e atualiza os tokens com o uso da resposta. |
-| `tool.call` | Marca "Trabalhando" e mostra a ferramenta e o alvo. |
-| `turn.complete` | Marca "Concluído", "Erro" ou "Aguardando", conforme o motivo e o status do agente. |
-
-Um subagente em segundo plano termina o turno enquanto espera outro trabalho e retoma sob o mesmo id. Por isso o mod só dá o subagente como concluído quando ele realmente terminou, e não no primeiro turno que acaba.
-
-O mod só observa: se a contabilidade dele falhar, o subagente e a ferramenta seguem normalmente, sem bloqueio. A única ação dele é o botão **■ Parar**, que chama o `TaskStop` com o id do subagente. Se a parada falhar, um aviso explica o motivo.
-
----
-
-## 🛠️ Desenvolvimento
-
-Estrutura do repositório:
+## Atualizar
 
 ```
-tripulacao/
-├── .claude-plugin/
-│   ├── plugin.json              # manifesto do mod
-│   └── marketplace.json         # permite instalar com /plugin install
-├── hooks/
-│   ├── hooks.json               # aponta para o módulo de hooks
-│   ├── register.tsx             # hooks, faixa e estado
-│   └── crab.ts                  # personagens e desenho dos caranguejos em SVG
-├── docs/
-│   ├── gerar-imagens.mjs        # gera as imagens do README a partir do crab.ts
-│   └── faixa.svg, rei.svg, tripulacao.svg
-├── types/index.d.ts             # contrato do estado (`$.state`)
-└── tests/crew.test.tsx          # testes do comportamento
+/plugin marketplace update tripulacao
 ```
 
-- **Tipos.** Para o editor e o `tsc`, o engine gera a pasta `.claude-plugin/types/` quando o mod carrega. Ela não vai para o repositório, porque pertence ao engine.
-- **Testes.** Rode com `claude plugin test ./tripulacao`.
-- **Validação.** Com o mod carregado, `claude plugin validate ./tripulacao` confere o manifesto e o módulo.
-- **Imagens do README.** São geradas a partir do próprio `crab.ts`, então os caranguejos saem idênticos aos do mod. Para regerar: `node --experimental-strip-types --no-warnings docs/gerar-imagens.mjs` (Node 22 ou mais novo). O layout da faixa é uma cópia do `register.tsx`: se ele mudar, ajuste o script também.
-- **Recarregamento.** Em sessão com recarregamento a quente ativo, cada edição recarrega o mod quando o turno termina.
+Depois, abra uma sessão nova.
 
----
+<br>
 
-## ✅ Checklist: editar e publicar
+## Perguntas frequentes
 
-Esta pasta é a **única fonte** do mod. O Claude Code lê direto daqui (marketplace de pasta local `tripulacao`), sem cópia no meio.
+<details>
+<summary><b>A barra fica em <code>—</code> o tempo todo.</b></summary>
+<br>
+O subagente não está usando lista de tarefas, então não há como saber quanto falta. Peça ao Claude que os subagentes mantenham uma lista (por exemplo, "use uma lista de tarefas e atualize a cada passo") e a barra passa a andar.
+</details>
 
-1. Edite os arquivos aqui mesmo.
-2. `claude plugin validate .` e `claude plugin test .`
-3. Se mudou o desenho, a faixa ou os estados, regere as imagens com `node --experimental-strip-types --no-warnings docs/gerar-imagens.mjs`.
-4. Na sessão aberta, rode `/reload-plugins` ou reinicie a sessão. Não precisa subir versão nem reinstalar.
-5. Confira com `claude plugin list`: `tripulacao@tripulacao` deve aparecer com `Read from:` apontando para esta pasta.
-6. Para publicar: suba `version` em `.claude-plugin/plugin.json` (só quando o código muda; mudança só no README não precisa), faça o commit e o `git push`. Quem instalou pelo GitHub atualiza com `claude plugin update tripulacao@tripulacao`.
-7. Confira com `git status` que não sobrou nada fora do commit e que a branch está igual à `origin/main`.
+<details>
+<summary><b>A barra parou em 99%.</b></summary>
+<br>
+Todos os itens da lista estão feitos, mas o subagente ainda não devolveu a resposta. Ela vai a 100% quando ele responde.
+</details>
 
-Não copie esta pasta para `~/.claude/skills` nem crie atalho/junction: o mod carregaria duas vezes ou falharia com "Path escapes plugin directory".
+<details>
+<summary><b>A tripulação deixa os subagentes mais lentos ou mais caros?</b></summary>
+<br>
+Não. Ela só observa os eventos e nunca bloqueia uma ferramenta: se algo falhar na contabilidade dela, o subagente segue normalmente. A única chamada que ela responde é o <code>update_plan</code> dentro de subagentes no app, que o app recusaria de qualquer jeito.
+</details>
 
-### Se o mod sumir ou parar de atualizar
+<details>
+<summary><b>Preciso do usage-hud?</b></summary>
+<br>
+Não. Os dois mods são independentes. Com os dois instalados, a faixa da tripulação fica logo abaixo do cartão do usage-hud, com um respiro entre eles.
+</details>
 
-Rode `claude plugin list`. Se `tripulacao@tripulacao` não aparecer, ou se `Read from:` apontar para `plugins/cache` em vez desta pasta, instale de novo a partir da pasta:
+<br>
 
-```bash
-claude plugin marketplace add "E:\Users\aliso\Documents\.Projetos\tripulacao"
-```
+## Para desenvolver
 
-```bash
-claude plugin install tripulacao@tripulacao --scope user
-```
+| Arquivo | O que tem |
+|---|---|
+| `hooks/register.tsx` | Os hooks: estado dos subagentes, barra de tarefa, janela de contexto e a faixa |
+| `hooks/clawd.ts` | O pixel art do Clawd, as poses, o mini Clawd e as cores |
+| `types/index.d.ts` | O contrato do estado que a faixa guarda na sessão |
+| `tests/crew.test.tsx` | Testes da faixa, da barra, das listas e da janela |
+| `docs/gerar-imagens.mjs` | Gera as imagens deste README a partir de `hooks/clawd.ts` |
+| `docs/prototipo/` | O protótipo visual e o desenho antigo dos caranguejos |
 
-Depois, `/reload-plugins` na sessão aberta.
+### ✅ Checklist: editar, testar e publicar
 
-## 👩‍💻 Autora
+Toda mudança é testada localmente antes de ir para o GitHub.
 
-Feito por **Alison Cruz**.
+1. Edite os arquivos nesta pasta.
+2. Valide e teste:
 
-## 📄 Licença
+   ```bash
+   claude plugin validate .
+   ```
 
-Distribuído sob a licença [MIT](LICENSE). Veja o arquivo `LICENSE` para o texto completo.
+   ```bash
+   claude plugin test .
+   ```
+
+3. Se mudou o visual, gere as imagens do README de novo:
+
+   ```bash
+   node docs/gerar-imagens.mjs
+   ```
+
+4. Suba `version` em `.claude-plugin/plugin.json` e instale a partir desta pasta para testar de verdade:
+
+   ```bash
+   claude plugin marketplace update tripulacao
+   ```
+
+   ```bash
+   claude plugin update tripulacao@tripulacao
+   ```
+
+   Na sessão aberta, rode `/reload-plugins`, ou abra uma sessão nova, e confira.
+
+5. Funcionou? Faça o commit e o `git push`.
+6. Confira com `git status` que não sobrou nada fora do commit e que a branch está igual à `origin/main`.
+
+Não copie esta pasta para `~/.claude/skills` nem crie atalho ou junction: o mod carregaria duas vezes ou falharia com "Path escapes plugin directory".
+
+<br>
+
+## Licença
+
+[MIT](LICENSE) © Alison Cruz
+
+<br>
+
+<div align="center">
+<sub>Feito por <a href="https://github.com/ba-lison">Alison Cruz</a></sub>
+</div>

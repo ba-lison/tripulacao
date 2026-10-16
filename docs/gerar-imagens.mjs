@@ -1,381 +1,254 @@
-// Gera docs/faixa.svg, docs/rei.svg e docs/tripulacao.svg do README da Tripulação.
-//
-// O desenho dos caranguejos vem de hooks/crab.ts (importado, nunca redesenhado aqui).
-// As constantes de hooks/register.tsx (cores, textos, STATUS, BOSS_LOOK, INK) não são
-// exportadas, então são lidas do próprio fonte. As funções de layout da faixa são cópias
-// de register.tsx. TYPE_CHAR também é lido do fonte, porque crab.ts não o exporta.
-//
-// Regerar: node --experimental-strip-types --no-warnings <este arquivo>
+// Gera as imagens do README a partir do próprio código do mod (hooks/clawd.ts),
+// para o README mostrar exatamente os Clawds, a barra e o mini Clawd que aparecem no app.
+// O layout de cada linha copia o de hooks/register.tsx: se ele mudar, ajuste aqui também.
+// Rodar na raiz do repositório: node docs/gerar-imagens.mjs  (Node 22.18+)
+import fs from 'node:fs'
 
-import { readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { tmpdir } from 'node:os'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { CLAUDE, CLAUDE_ORANGE, CLAWD_LABEL, baseColor, clawdSvg, miniClawd } from '../hooks/clawd.ts'
 
-const REPO = join(dirname(fileURLToPath(import.meta.url)), '..')
-const DOCS = join(REPO, 'docs')
-const PREVIEW = join(tmpdir(), 'tripulacao-preview.html')
+const SANS = "Inter, -apple-system, 'Segoe UI', system-ui, sans-serif"
+const MONO = "'JetBrains Mono','Cascadia Code',Consolas,Menlo,monospace"
+const INK = { subtle: '#8a8a90', inactive: '#4d4d52', detail: '#85858b', faded: '#6e6e73', text: '#f2f2f5', lime: '#a3e635', sep: '#3f3f44' }
+// As cores de status de hooks/register.tsx (STATUS).
+const STATUS = { thinking: '#5aa7e8', waiting: '#e0b04a', done: '#a3e635', error: '#e5484d' }
+const BAR = 140
 
-const crabPath = join(REPO, 'hooks', 'crab.ts')
-const regPath = join(REPO, 'hooks', 'register.tsx')
-const crabSrc = readFileSync(crabPath, 'utf8')
-const regSrc = readFileSync(regPath, 'utf8')
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-const { CHARS, crab, kingScene, charOf, SCENE } = await import(pathToFileURL(crabPath).href)
-
-/* ---------------- constantes lidas do fonte ---------------- */
-
-// Um bloco `const NAME ... }` do fonte, do `const` até a chave de fechamento na coluna 0.
-function block(src, name) {
-  const start = src.indexOf(`const ${name}`)
-  const end = start < 0 ? -1 : src.indexOf('\n}', start)
-  if (start < 0 || end < 0) throw new Error(`const ${name} não encontrada no fonte`)
-  return src.slice(start, end)
+// O Clawd de uma pose, como o mod desenha, em (x, y) com largura w.
+function clawd(kind, x, y, w = 34) {
+  const h = (w * 33) / 34
+  return clawdSvg(kind).replace(/^<svg xmlns="http:\/\/www.w3.org\/2000\/svg" width="34" height="33"/, `<svg x="${x}" y="${y}" width="${w}" height="${h}"`)
 }
 
-// Quem prefere cada personagem: TYPE_CHAR, em crab.ts (não exportado).
-// Chaves entre aspas ('general-purpose') ou nomes simples (Explore, Plan).
-const TYPE_CHAR = Object.fromEntries(
-  [...block(crabSrc, 'TYPE_CHAR').matchAll(/(?:'([^']+)'|([A-Za-z]\w*)):\s*'([^']+)'/g)].map(m => [m[1] ?? m[2], m[3]]),
-)
-const INK = Object.fromEntries([...block(regSrc, 'INK').matchAll(/(\w+):\s*'([^']*)'/g)].map(m => [m[1], m[2]]))
-const MODEL_COLOR = Object.fromEntries([...block(regSrc, 'MODEL_COLOR').matchAll(/(\w+):\s*'(#[0-9a-fA-F]{6})'/g)].map(m => [m[1], m[2]]))
-const STATUS = Object.fromEntries(
-  [...block(regSrc, 'STATUS').matchAll(/(\w+):\s*\{\s*label:\s*'([^']*)',\s*color:\s*'(#[0-9a-fA-F]{6})',\s*eyes:\s*'(\w+)'/g)]
-    .map(m => [m[1], { label: m[2], color: m[3], eyes: m[4] }]),
-)
-const BOSS_LOOK = Object.fromEntries(
-  [...block(regSrc, 'BOSS_LOOK').matchAll(/(\w+):\s*\{\s*label:\s*'([^']*)',\s*eyes:\s*'(\w+)',\s*isWalking:\s*(true|false),\s*aside:\s*(null|'\w+')/g)]
-    .map(m => [m[1], { label: m[2], eyes: m[3], isWalking: m[4] === 'true', aside: m[5] === 'null' ? null : m[5].slice(1, -1) }]),
-)
-
-const expectCount = (n, got, what) => {
-  if (n !== got) throw new Error(`leitura de ${what}: achei ${got} entradas, esperava ${n}`)
-}
-expectCount(10, Object.keys(TYPE_CHAR).length, 'TYPE_CHAR')
-expectCount(11, Object.keys(INK).length, 'INK')
-expectCount(4, Object.keys(MODEL_COLOR).length, 'MODEL_COLOR')
-expectCount(5, Object.keys(STATUS).length, 'STATUS')
-expectCount(7, Object.keys(BOSS_LOOK).length, 'BOSS_LOOK')
-
-// Cores que o mod não define por nome (vêm do tema do app): escolhas minhas, mais próximas da paleta INK.
-const SUBTLE = INK.detail // "subtle" do tema do host
-const DIM = INK.faded // botões com dimColor
-const BAND_LINGER_MS = 6000 // register.tsx
-const FONT = "Inter, 'Segoe UI', system-ui, sans-serif"
-const PAGE_BG = '#1f1f22'
-
-/* ---------------- cópias de register.tsx (layout e textos) ---------------- */
-
-function prettyModel(id) {
-  const m = /(opus|sonnet|haiku|fable)(?:[-_ ]?(\d+)(?:[-.](\d{1,2})(?!\d))?)?/i.exec(id)
-  if (m === null) return id.replace(/^claude-/, '')
-  const family = m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase()
-  if (m[2] === undefined) return family
-  return m[3] === undefined ? `${family} ${m[2]}` : `${family} ${m[2]}.${m[3]}`
-}
-
-function windowOf(model) {
-  return /\[1m\]|-1m\b/i.test(model) ? 1_000_000 : 200_000
-}
-
-function modelColor(model) {
-  return MODEL_COLOR[model.split(' ')[0]] ?? INK.name
-}
-
-function formatTokens(n) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 10_000) return `${Math.round(n / 1000)}k`
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
-  return `${Math.round(n)}`
-}
-
-function formatTime(ms) {
-  const s = Math.max(0, Math.floor(ms / 1000))
-  const hh = Math.floor(s / 3600)
-  const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0')
-  const ss = String(s % 60).padStart(2, '0')
-  return hh > 0 ? `${hh}:${mm}:${ss}` : `${mm}:${ss}`
-}
-
-const pctOf = m => Math.min(100, Math.round((m.tokens / m.window) * 100))
-const barPct = m => Math.min(100, (m.tokens / m.window) * 100)
-const elapsed = (m, now) => (m.endedAt ?? Math.max(now, m.startedAt)) - m.startedAt
-const ativos = n => `${n} ${n === 1 ? 'ativo' : 'ativos'}`
-const cut = (text, max) => (text.length > max ? `${text.slice(0, Math.max(1, max - 1))}…` : text)
-const activity = m => (m.tool === null ? m.target : `${m.tool} ${m.target}`.trim())
-
-function shortPath(p) {
-  const parts = p.replace(/\\/g, '/').split('/').filter(Boolean)
-  return parts.length > 3 ? `…/${parts.slice(-3).join('/')}` : parts.join('/')
-}
-
-function targetOf(tool, input) {
-  const s = k => (typeof input[k] === 'string' ? input[k] : '')
-  switch (tool) {
-    case 'Read':
-    case 'Edit':
-    case 'Write':
-    case 'NotebookEdit':
-      return shortPath(s('file_path') || s('notebook_path'))
-    case 'Bash':
-    case 'PowerShell':
-      return (s('description') || s('command')).split('\n')[0] ?? ''
-    case 'Grep':
-      return `"${s('pattern')}"${s('path') ? ` em ${shortPath(s('path'))}` : ''}`
-    case 'Glob':
-      return s('pattern')
-    case 'WebFetch':
-      try {
-        return new URL(s('url')).host
-      } catch {
-        return s('url')
-      }
-    case 'WebSearch':
-      return s('query')
-    default:
-      return s('description') || s('query') || s('pattern') || s('file_path')
-  }
-}
-
-// A barra fina com o ponto brilhante na ponta (hairline do register.tsx).
-function hairline(id, x, cy, width, pct, color) {
-  const w = (Math.min(Math.max(pct, 0), 100) / 100) * width
-  const tip = w > 0
-    ? `<circle cx="${x + w}" cy="${cy}" r="5" fill="${color}" opacity=".5" filter="url(#${id}-glow)"/><circle cx="${x + w}" cy="${cy}" r="2.5" fill="${color}"/>`
-    : ''
+function frame(width, height, inner, { title = '', defs = '' } = {}) {
   return [
-    `<linearGradient id="${id}-fill" x1="0" x2="1"><stop offset="0" stop-color="${color}" stop-opacity=".4"/><stop offset="1" stop-color="${color}"/></linearGradient>`,
-    `<filter id="${id}-glow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="3"/></filter>`,
-    `<rect x="${x}" y="${cy - 1}" width="${width}" height="2" rx="1" fill="${INK.hair}"/>`,
-    `<rect x="${x}" y="${cy - 1}" width="${w}" height="2" rx="1" fill="url(#${id}-fill)"/>`,
-    tip,
-  ].join('')
-}
-
-/* ---------------- helpers de SVG ---------------- */
-
-const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-// Texto alinhado verticalmente pelo centro (dominant-baseline), como as linhas da faixa.
-function text(x, y, s, o = {}) {
-  const anchor = o.anchor ? ` text-anchor="${o.anchor}"` : ''
-  const size = o.size ? ` font-size="${o.size}"` : ''
-  return `<text x="${x}" y="${y}" dominant-baseline="central"${anchor}${size} fill="${o.fill ?? INK.figure}">${esc(s)}</text>`
-}
-
-function root(w, h, title, inner) {
-  return [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"`,
-    ` font-family="${FONT}" font-size="13" style="font-variant-numeric:tabular-nums">`,
-    `<title>${esc(title)}</title>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="${SANS}" style="font-variant-numeric:tabular-nums">`,
+    title ? `<title>${esc(title)}</title>` : '',
+    `<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121214"/><stop offset="1" stop-color="#0a0a0b"/></linearGradient>${defs}</defs>`,
+    `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="16" fill="url(#bg)" stroke="#232326"/>`,
     inner,
-    '</svg>\n',
+    '</svg>',
+  ].join('\n')
+}
+
+function button(x, y, label, { primary = false, w, h = 24, dim = false } = {}) {
+  const width = w ?? 16 + label.length * 7
+  return [
+    `<rect x="${x + 0.5}" y="${y + 0.5}" width="${width}" height="${h}" rx="6" fill="${primary ? CLAUDE : '#2a2a2d'}"/>`,
+    `<text x="${x + width / 2}" y="${y + h / 2 + 0.5}" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="${primary ? '#fff' : dim ? INK.detail : INK.text}">${esc(label)}</text>`,
   ].join('')
 }
 
-/* ---------------- faixa: a band above the prompt ---------------- */
+// A barra de tarefa, como taskBar() em register.tsx: o fio laranja e o mini Clawd na ponta.
+function taskBar(id, x, cy, pct, isHopping, width = BAR) {
+  const w = (Math.min(Math.max(pct, 0), 100) / 100) * width
+  return [
+    `<linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="${baseColor(CLAUDE_ORANGE, 0.45)}"/><stop offset="1" stop-color="${CLAUDE}"/></linearGradient>`,
+    `<rect x="${x}" y="${cy - 1}" width="${width}" height="2" rx="1" fill="#fff" fill-opacity=".07"/>`,
+    `<rect x="${x}" y="${cy - 1}" width="${w}" height="2" rx="1" fill="url(#${id})"/>`,
+    `<g transform="translate(${x + Math.max(w, 8)} ${cy + 1})">${miniClawd(CLAUDE, isHopping)}</g>`,
+  ].join('')
+}
 
-// Três subagentes: o Lupa trabalhando com o Grep, o Clawd pensando e o Ninja concluído.
-// Os valores de tokens somam 175.100 (cabeçalho "175k"), e só os dois sem endedAt contam como ativos.
-function faixa() {
-  const now = 100_000
-  const crew = [
-    {
-      id: 'a1', charId: 'lupa', type: 'Explore', description: 'Mapear os estados do Rei',
-      model: prettyModel('claude-haiku-5-5'), window: windowOf('claude-haiku-5-5'),
-      startedAt: 28_000, endedAt: null, status: 'working',
-      tool: 'Grep', target: targetOf('Grep', { pattern: 'BOSS_LOOK', path: 'hooks' }),
-      tools: 4, tokens: 62_300, log: [],
-    },
-    {
-      id: 'a2', charId: 'clawd', type: 'general-purpose', description: 'Revisar o módulo',
-      model: prettyModel('claude-opus-5-5'), window: windowOf('claude-opus-5-5'),
-      startedAt: 0, endedAt: null, status: 'thinking',
-      tool: null, target: 'Pensando…',
-      tools: 9, tokens: 86_600, log: [],
-    },
-    {
-      id: 'a3', charId: 'ninja', type: 'code-review', description: 'Revisar o diff',
-      model: prettyModel('claude-sonnet-5-5'), window: windowOf('claude-sonnet-5-5'),
-      startedAt: 61_000, endedAt: 97_000, status: 'done',
-      tool: null, target: 'Devolveu o resultado',
-      tools: 6, tokens: 26_200, log: [],
-    },
+// O cabeçalho da faixa: a contagem à esquerda e o botão de ocultar, separado, à direita.
+function header(x, y, right, text, isFolded) {
+  const label = isFolded ? '▸ Mostrar' : '▾ Ocultar'
+  return [
+    `<text x="${x}" y="${y}" dominant-baseline="central" font-size="13" fill="${INK.subtle}">${esc(text)}</text>`,
+    button(right - 86, y - 12, label, { w: 86 }),
+  ].join('')
+}
+
+// Uma linha por subagente, nas colunas de register.tsx: Clawd, tipo, modelo, barra, %,
+// tokens / janela, tempo, atividade e o botão Parar enquanto ele roda.
+function row(i, x, cy, m) {
+  const pctText = m.pct === null ? '—' : `${m.pct}%`
+  const actColor = m.status === 'working' ? INK.subtle : STATUS[m.status]
+  const at = `y="${cy}" dominant-baseline="central"`
+  return [
+    clawd(m.kind, x, cy - 19, 34),
+    `<text x="${x + 46}" ${at} font-size="13" fill="${INK.subtle}">${esc(m.type)}</text>`,
+    `<text x="${x + 126}" ${at} font-size="13" fill="${CLAUDE}">${esc(m.model)}</text>`,
+    taskBar(`b${i}`, x + 204, cy, m.pct ?? 0, m.status === 'working'),
+    `<text x="${x + 360}" ${at} font-size="13" fill="${m.pct === null ? INK.inactive : CLAUDE}">${pctText}</text>`,
+    `<text x="${x + 498}" ${at} font-size="13" text-anchor="end" fill="${INK.subtle}">${esc(m.tokens)}</text>`,
+    `<text x="${x + 508}" ${at} font-size="13" fill="${INK.subtle}">${esc(m.time)} ·</text>`,
+    `<text x="${x + 566}" ${at} font-size="13" fill="${actColor}">${esc(m.activity)}</text>`,
+    m.running ? button(x + 744, cy - 12, '■ Parar', { w: 66, dim: true }) : '',
+  ].join('')
+}
+
+const CREW = [
+  { kind: 'lendo', type: 'Explore', model: 'Haiku 5.5', pct: 63, tokens: '41k / 1M', time: '01:12', activity: 'Grep "checkout" em src', status: 'working', running: true },
+  { kind: 'editando', type: 'general', model: 'Sonnet 5.5', pct: 38, tokens: '88k / 1M', time: '02:40', activity: 'Edit …/hooks/register.tsx', status: 'working', running: true },
+  { kind: 'pensando', type: 'Plan', model: 'Opus 5.5', pct: null, tokens: '19k / 1M', time: '00:31', activity: 'Pensando…', status: 'thinking', running: true },
+  { kind: 'concluido', type: 'review', model: 'Haiku 5.5', pct: 100, tokens: '23k / 1M', time: '01:05', activity: 'Devolveu o resultado', status: 'done', running: false },
+]
+
+// A janela do app: o cartão do usage-hud acima, a faixa da Tripulação e o campo de mensagem.
+function appChrome(width, bandTop, bandBottom) {
+  return [
+    `<circle cx="26" cy="24" r="5.5" fill="#ff5f57"/><circle cx="44" cy="24" r="5.5" fill="#febc2e"/><circle cx="62" cy="24" r="5.5" fill="#28c840"/>`,
+    `<text x="${width / 2}" y="28" text-anchor="middle" font-size="12" fill="#4d4d52">Claude Code</text>`,
+    // O usage-hud, resumido, para mostrar onde a faixa se encaixa.
+    `<rect x="30.5" y="48.5" width="${width - 61}" height="42" rx="10" fill="#151517" stroke="#2a2a2d" opacity=".55"/>`,
+    `<text x="52" y="69.5" dominant-baseline="central" font-size="12" fill="#4d4d52">usage-hud · Janela 5h · Contexto</text>`,
+    button(width - 146, 57, 'Gerar handoff', { w: 104, dim: true }),
+    `<rect x="30.5" y="${bandBottom + 14.5}" width="${width - 61}" height="44" rx="12" fill="#151517" stroke="#2a2a2d"/>`,
+    `<text x="52" y="${bandBottom + 37}" dominant-baseline="central" font-size="13" fill="#4d4d52">Responda ao Claude…</text>`,
+  ].join('')
+}
+
+/* ---------------- faixa: a Tripulação no app, com quatro subagentes ---------------- */
+
+function band() {
+  const W = 900
+  const top = 112
+  const inner = [
+    appChrome(W, top, top + 236),
+    header(40, top, W - 40, 'Subagentes · 3 ativos · 171k tokens', false),
+    ...CREW.map((m, i) => row(i, 34, top + 48 + i * 52, m)),
+  ].join('')
+  return frame(W, top + 236 + 76, inner, { title: 'A faixa da Tripulação acima do campo de mensagem: quatro subagentes, cada um com o seu Clawd, a barra de tarefa e o botão Parar' })
+}
+
+/* ---------------- oculta: só o cabeçalho, com o botão Mostrar ---------------- */
+
+function folded() {
+  const W = 900
+  const inner = [
+    `<text x="40" y="26" dominant-baseline="central" font-size="11" fill="${INK.faded}">faixa aberta</text>`,
+    header(40, 56, W - 40, 'Subagentes · 3 ativos · 171k tokens', false),
+    row(9, 34, 100, CREW[0]),
+    `<line x1="40" y1="138" x2="${W - 40}" y2="138" stroke="#232326"/>`,
+    `<text x="40" y="160" dominant-baseline="central" font-size="11" fill="${INK.faded}">faixa oculta: só o cabeçalho, até você clicar em Mostrar</text>`,
+    header(40, 190, W - 40, 'Subagentes · 3 ativos · 171k tokens', true),
+  ].join('')
+  return frame(W, 222, inner, { title: 'O botão Ocultar recolhe a faixa até o cabeçalho; o botão Mostrar abre de novo' })
+}
+
+/* ---------------- progresso: a barra segue a lista de tarefas do subagente ---------------- */
+
+function progress() {
+  const W = 900
+  const steps = [
+    { list: ['in_progress', 'pending', 'pending', 'pending'], pct: 13, note: 'criou a lista' },
+    { list: ['completed', 'in_progress', 'pending', 'pending'], pct: 38, note: 'item 1 feito' },
+    { list: ['completed', 'completed', 'in_progress', 'pending'], pct: 63, note: 'item 2 feito' },
+    { list: ['completed', 'completed', 'completed', 'in_progress'], pct: 88, note: 'item 3 feito' },
+    { list: ['completed', 'completed', 'completed', 'completed'], pct: 100, note: 'respondeu' },
   ]
+  const mark = { completed: ['✓', STATUS.done], in_progress: ['◐', CLAUDE], pending: ['○', INK.inactive] }
+  const rows = steps
+    .map((s, i) => {
+      const cy = 56 + i * 40
+      const marks = s.list.map((st, k) => `<tspan fill="${mark[st][1]}" dx="${k ? 6 : 0}">${mark[st][0]}</tspan>`).join('')
+      return [
+        `<text x="40" y="${cy}" dominant-baseline="central" font-size="15" font-family="${MONO}">${marks}</text>`,
+        `<text x="150" y="${cy}" dominant-baseline="central" font-size="12.5" fill="${INK.detail}">${esc(s.note)}</text>`,
+        taskBar(`p${i}`, 270, cy, s.pct, s.pct < 100),
+        `<text x="428" y="${cy}" dominant-baseline="central" font-size="13" font-weight="600" fill="${CLAUDE}">${s.pct}%</text>`,
+      ].join('')
+    })
+    .join('')
+  const side = [
+    `<rect x="508.5" y="34.5" width="352" height="196" rx="10" fill="#151517" stroke="#2a2a2d"/>`,
+    `<text x="530" y="62" font-size="13" font-weight="600" fill="${INK.text}">Como a porcentagem é contada</text>`,
+    ...[
+      [`<tspan fill="${STATUS.done}">✓</tspan> item concluído conta 1`],
+      [`<tspan fill="${CLAUDE}">◐</tspan> item em andamento conta meio`],
+      [`<tspan fill="${INK.inactive}">○</tspan> item pendente conta 0`],
+      ['fica em no máximo 99% até ele responder'],
+      [`<tspan fill="${INK.inactive}">—</tspan> quando o subagente não tem lista`],
+    ].map(([t], k) => `<text x="530" y="${92 + k * 26}" font-size="12.5" fill="${INK.detail}">${t}</text>`),
+  ].join('')
+  return frame(W, 262, rows + side, { title: 'A barra de tarefa segue a lista do subagente: 13, 38, 63, 88 e 100%' })
+}
 
-  // Colunas do Box: 8 px por coluna (suposição: o mod define larguras em colunas, não em px).
-  const W = 900, H = 220
-  const CARD = { x: 24, y: 24, w: 852, h: 172, r: 12 }
-  const L = 48 // início do conteúdo: 16 px do cartão + paddingX 1 (8 px)
-  const R = 852 // fim do conteúdo, onde ficam "▾ Ocultar" e "■ Parar"
-  const COL = 8
-  const ICON_X = L + (3 * COL - 18) / 2 // Box de 3 colunas, ícone de 18 px centrado
-  const NAME_X = L + 3 * COL
-  const MODEL_X = NAME_X + 10 * COL
-  const BAR_X = MODEL_X + 9 * COL
-  const TOK_END = BAR_X + 140 + 7 * COL // Box de 7 colunas, texto alinhado à direita
-  const PCT_X = TOK_END + COL // marginLeft 1
+/* ---------------- poses: as 14 poses e o que liga cada uma ---------------- */
 
-  const band = crew.filter(m => m.endedAt === null || now - m.endedAt < BAND_LINGER_MS)
-  const active = crew.filter(m => m.endedAt === null).length
-  const total = crew.reduce((s, m) => s + m.tokens, 0)
-
-  const out = [
-    `<rect width="${W}" height="${H}" rx="16" fill="${PAGE_BG}"/>`,
-    `<rect x="${CARD.x}" y="${CARD.y}" width="${CARD.w}" height="${CARD.h}" rx="${CARD.r}" fill="${INK.card}" stroke="${INK.border}"/>`,
-    text(L, 50, `Subagentes · ${ativos(active)} · ${formatTokens(total)} tokens`, { fill: SUBTLE }),
-    text(R, 50, '▾ Ocultar', { anchor: 'end', fill: DIM }),
+function poses() {
+  const list = [
+    ['pensando', 'esperando o modelo'],
+    ['lendo', 'Read · Grep · Glob'],
+    ['editando', 'Edit · Write'],
+    ['terminal', 'Bash · PowerShell'],
+    ['web', 'WebSearch · WebFetch'],
+    ['orquestrando', 'Agent · SendMessage'],
+    ['trabalhando', 'outra ferramenta'],
+    ['esperando', 'AskUserQuestion'],
+    ['aguardando', 'segundo plano'],
+    ['concluido', 'devolveu o resultado'],
+    ['interrompido', 'Parar ou Esc'],
+    ['erro', 'falhou'],
   ]
-
-  band.forEach((m, i) => {
-    const cy = 90 + 40 * i // linha de 20 px com marginTop de 20 px
-    const c = charOf(m.charId)
-    const st = STATUS[m.status]
-    const act = cut(activity(m) || st.label, 32)
-    out.push(
-      `<svg x="${ICON_X}" y="${cy - 9}" width="18" height="18" viewBox="0 -2 18 18" overflow="hidden">${crab(c, 0, 0, 1, false, st.eyes)}</svg>`,
-      text(NAME_X, cy, c.name, { fill: SUBTLE }),
-      text(MODEL_X, cy, m.model, { fill: modelColor(m.model) }),
-      `<svg x="${BAR_X}" y="${cy - 6}" width="140" height="12" viewBox="0 0 140 12">${hairline(`r${i}`, 0, 6, 140, barPct(m), c.color)}</svg>`,
-      text(TOK_END, cy, formatTokens(m.tokens), { anchor: 'end', fill: INK.figure }),
-      `<text x="${PCT_X}" y="${cy}" dominant-baseline="central">` +
-        `<tspan fill="${SUBTLE}">${esc(`${pctOf(m)}% · ${formatTime(elapsed(m, now))} ·`)}</tspan>` +
-        `<tspan dx="8" fill="${m.status === 'working' ? SUBTLE : st.color}">${esc(act)}</tspan></text>`,
-    )
-    if (m.endedAt === null) out.push(text(R, cy, '■ Parar', { anchor: 'end', fill: DIM }))
-  })
-
-  return root(W, H, 'Faixa da Tripulação com três subagentes', out.join(''))
-}
-
-/* ---------------- rei: os sete estados do Rei Clawd ---------------- */
-
-const splitLabel = s => {
-  if (s.length <= 16) return [s]
-  const i = s.indexOf(' ')
-  return [s.slice(0, i), s.slice(i + 1)]
-}
-
-function rei() {
-  const order = ['idle', 'working', 'thinking', 'asking', 'waiting', 'done', 'error']
-  const W = 960, H = 190, CELL = 132, TOP = 24, SCALE = 2
-  const out = [`<rect width="${W}" height="${H}" rx="16" fill="${PAGE_BG}"/>`]
-  order.forEach((key, i) => {
-    const look = BOSS_LOOK[key]
-    const cx = 84 + i * CELL
-    out.push(`<g transform="translate(${cx - (SCENE.width * SCALE) / 2} ${TOP}) scale(${SCALE})">${kingScene(look.isWalking, look.eyes, look.aside)}</g>`)
-    const caption = look.label.charAt(0).toUpperCase() + look.label.slice(1)
-    splitLabel(caption).forEach((line, j) => {
-      out.push(text(cx, TOP + SCENE.height * SCALE + 22 + j * 17, line, { anchor: 'middle', fill: INK.name }))
+  const SHORT = { lendo: 'lendo', orquestrando: 'orquestrando', esperando: 'esperando você', aguardando: 'aguardando', terminal: 'no terminal' }
+  const cols = 6
+  const cw = 143
+  const ch = 150
+  const cells = list
+    .map(([kind, ev], i) => {
+      const cx = 21 + (i % cols) * cw
+      const cy = 20 + Math.floor(i / cols) * ch
+      return [
+        `<rect x="${cx + 4.5}" y="${cy + 4.5}" width="${cw - 9}" height="${ch - 9}" rx="10" fill="#1a1a1d" stroke="#2a2a2d"/>`,
+        clawd(kind, cx + cw / 2 - 32, cy + 26, 64),
+        `<text x="${cx + cw / 2}" y="${cy + 108}" text-anchor="middle" font-size="12" font-weight="600" fill="${INK.text}">${esc(SHORT[kind] ?? CLAWD_LABEL[kind])}</text>`,
+        `<text x="${cx + cw / 2}" y="${cy + 126}" text-anchor="middle" font-size="9.5" font-family="${MONO}" fill="${INK.lime}">${esc(ev)}</text>`,
+      ].join('')
     })
-  })
-  return root(W, H, 'Rei Clawd nos sete estados', out.join(''))
+    .join('')
+  return frame(900, 340, cells, { title: 'As poses do Clawd de cada subagente e o que liga cada uma' })
 }
 
-/* ---------------- tripulação: os dez personagens ---------------- */
+/* ---------------- terminal: a mesma faixa em texto ---------------- */
 
-// Cada tipo preferido vira uma linha; "prefixo:nome" quebra em duas linhas para caber na coluna.
-function typeLines(charId) {
-  return Object.keys(TYPE_CHAR)
-    .filter(t => TYPE_CHAR[t] === charId)
-    .flatMap(t => {
-      const i = t.indexOf(':')
-      return i < 0 ? [t] : [t.slice(0, i + 1), t.slice(i + 1)]
-    })
-}
-
-function tripulacao() {
-  const W = 1088, H = 210, PITCH = 104, TOP = 24, SCALE = 4
-  const CRAB_W = 18 * SCALE // grade de 18 colunas
-  const CRAB_H = 15 * SCALE // grade de 15 linhas
-  const out = [`<rect width="${W}" height="${H}" rx="16" fill="${PAGE_BG}"/>`]
-  CHARS.forEach((c, i) => {
-    const cx = 24 + PITCH / 2 + i * PITCH
-    out.push(crab(c, cx - CRAB_W / 2, TOP, SCALE, false, 'normal'))
-    out.push(text(cx, TOP + CRAB_H + 22, c.name, { anchor: 'middle', fill: INK.figure }))
-    typeLines(c.id).forEach((line, j) => {
-      out.push(text(cx, TOP + CRAB_H + 40 + j * 15, line, { anchor: 'middle', size: 11, fill: SUBTLE }))
-    })
-  })
-  return root(W, H, 'Os dez personagens da Tripulação', out.join(''))
-}
-
-/* ---------------- validação: XML bem formado ---------------- */
-
-// Parser mínimo: confere tags abertas e fechadas, um único elemento raiz e '&' escapado.
-function wellFormed(xml) {
-  const tag = /<!--[\s\S]*?-->|<\?[\s\S]*?\?>|<!DOCTYPE[^>]*>|<\/([A-Za-z][\w.:-]*)\s*>|<([A-Za-z][\w.:-]*)((?:\s+[A-Za-z_][\w.:-]*\s*=\s*(?:"[^"]*"|'[^']*'))*)\s*(\/?)>|([^<]+)|(<)/g
-  const badAmp = /&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/
-  const stack = []
-  let roots = 0
-  let m
-  while ((m = tag.exec(xml)) !== null) {
-    if (m[6] !== undefined) throw new Error(`'<' sem fechamento na posição ${m.index}`)
-    if (m[5] !== undefined) {
-      if (badAmp.test(m[5])) throw new Error(`'&' sem escape perto da posição ${m.index}`)
-      continue
-    }
-    if (m[1] !== undefined) {
-      const open = stack.pop()
-      if (open !== m[1]) throw new Error(`</${m[1]}> não bate com <${open}> na posição ${m.index}`)
-      continue
-    }
-    if (m[2] !== undefined) {
-      if (badAmp.test(m[3])) throw new Error(`'&' sem escape nos atributos da posição ${m.index}`)
-      if (stack.length === 0) roots++
-      if (m[4] !== '/') stack.push(m[2])
-    }
+function terminal() {
+  const cells = 14
+  const line = (y, m) => {
+    const n = Math.round(((m.pct ?? 0) / 100) * cells)
+    const act = m.status === 'working' ? '#8a8a90' : STATUS[m.status]
+    return [
+      `<text x="32" y="${y}" fill="${CLAUDE}">■</text>`,
+      `<text x="56" y="${y}" fill="#8a8a90">${esc(m.type)}</text>`,
+      `<text x="150" y="${y}" fill="${CLAUDE}">${esc(m.model)}</text>`,
+      `<text x="250" y="${y}"><tspan fill="${CLAUDE}">${'━'.repeat(n)}</tspan><tspan fill="#3a3a3f">${'─'.repeat(cells - n)}</tspan></text>`,
+      `<text x="384" y="${y}" fill="${m.pct === null ? '#4d4d52' : CLAUDE}">${m.pct === null ? '—' : `${m.pct}%`}</text>`,
+      `<text x="530" y="${y}" text-anchor="end" fill="#8a8a90">${esc(m.tokens)}</text>`,
+      `<text x="544" y="${y}" fill="#8a8a90">${esc(m.time)} ·</text>`,
+      `<text x="620" y="${y}" fill="${act}">${esc(m.activity.length > 17 ? `${m.activity.slice(0, 16)}…` : m.activity)}</text>`,
+      m.running ? `<text x="${880 - 32}" y="${y}" text-anchor="end" fill="#e6e6ea">■ Parar</text>` : '',
+    ].join('')
   }
-  if (stack.length) throw new Error(`tags sem fechamento: ${stack.join(', ')}`)
-  if (roots !== 1) throw new Error(`esperava um elemento raiz, achei ${roots}`)
+  const inner = [
+    `<circle cx="24" cy="22" r="5" fill="#3a3a3f"/><circle cx="40" cy="22" r="5" fill="#3a3a3f"/><circle cx="56" cy="22" r="5" fill="#3a3a3f"/>`,
+    `<text x="440" y="26" text-anchor="middle" font-size="11.5" fill="#4d4d52">terminal</text>`,
+    `<text x="32" y="62" fill="#8a8a90">Subagentes · 3 ativos · 171k tokens</text>`,
+    `<text x="${880 - 32}" y="62" text-anchor="end" fill="#e6e6ea">[ ▾ Ocultar ]</text>`,
+    ...CREW.map((m, i) => line(94 + i * 28, m)),
+    `<text x="32" y="${94 + 4 * 28 + 6}" fill="#4d4d52">&gt;</text>`,
+    `<rect x="48" y="${94 + 4 * 28 - 6}" width="8" height="15" fill="${INK.lime}"><animate attributeName="opacity" values="1;1;0;0" keyTimes="0;.5;.5;1" dur="1.1s" repeatCount="indefinite"/></rect>`,
+  ].join('')
+  const H = 94 + 4 * 28 + 32
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="880" height="${H}" viewBox="0 0 880 ${H}" font-family="${MONO}" font-size="13.5">`,
+    '<title>A Tripulação no terminal: a mesma faixa em texto, com a barra em traços</title>',
+    `<rect x=".5" y=".5" width="879" height="${H - 1}" rx="14" fill="#0c0c0d" stroke="#232326"/>`,
+    inner,
+    '</svg>',
+  ].join('\n')
 }
 
-/* ---------------- escrita ---------------- */
-
-const outputs = {
-  'faixa.svg': faixa(),
-  'rei.svg': rei(),
-  'tripulacao.svg': tripulacao(),
+const out = {
+  'assets/faixa-subagentes.svg': band(),
+  'assets/faixa-oculta.svg': folded(),
+  'assets/progresso-tarefa.svg': progress(),
+  'assets/poses-subagente.svg': poses(),
+  'assets/terminal-faixa.svg': terminal(),
 }
-
-for (const [name, svg] of Object.entries(outputs)) {
-  writeFileSync(join(DOCS, name), svg, 'utf8')
-  wellFormed(readFileSync(join(DOCS, name), 'utf8'))
-  console.log(`ok  docs/${name}  ${svg.length} caracteres  XML bem formado`)
+fs.mkdirSync('assets', { recursive: true })
+for (const [path, svg] of Object.entries(out)) {
+  fs.writeFileSync(path, svg + '\n')
+  console.log(`${path}  ${(svg.length / 1024).toFixed(1)} KB`)
 }
-
-// Preview local com as três imagens, em fundo escuro (como o GitHub no tema escuro) e claro.
-const fileUrl = name => `file:///${join(DOCS, name).replace(/\\/g, '/')}`
-const section = (title, name, alt) => `<h2>${title}</h2><img src="${fileUrl(name)}" alt="${alt}">`
-const page = bg => `<section style="background:${bg};padding:16px;border-radius:8px;margin-bottom:24px">
-${section('docs/faixa.svg', 'faixa.svg', 'Faixa')}
-${section('docs/rei.svg', 'rei.svg', 'Rei Clawd')}
-${section('docs/tripulacao.svg', 'tripulacao.svg', 'Tripulação')}
-</section>`
-const html = `<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Preview README Tripulação</title>
-<style>
-  body { margin: 24px; font-family: system-ui, sans-serif; background: #f6f8fa; color: #1f2328; }
-  h2 { font: 600 14px system-ui, sans-serif; color: #888; margin: 18px 0 6px; }
-  img { display: block; max-width: 100%; height: auto; }
-  section { overflow-x: auto; }
-</style>
-</head>
-<body>
-<h1 style="font-size:18px">Preview das imagens do README (escuro e claro)</h1>
-${page('#0d1117')}
-${page('#ffffff')}
-</body>
-</html>
-`
-writeFileSync(PREVIEW, html, 'utf8')
-console.log(`ok  preview ${PREVIEW}`)
-
-// Resumo do que foi lido do fonte, para conferir.
-console.log('TYPE_CHAR:', JSON.stringify(TYPE_CHAR))
-console.log('BOSS_LOOK:', Object.entries(BOSS_LOOK).map(([k, v]) => `${k}=${v.label}(${v.eyes},${v.isWalking},${v.aside})`).join(' | '))
