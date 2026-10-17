@@ -208,26 +208,26 @@ test('a tool call marks the subagent working, and its answer marks it done', asy
   await spawnExplore($)
 
   await $.tool.call(inAgent({ tool: 'Grep', tool_use_id: 'g1', pattern: 'checkout', path: 'src' } as const, 'a1'))
-  let band = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
   expect(await band.find({ type: 'Text', text: /Grep "checkout" em src/ })).toBeDefined()
   expect((await band.find({ type: 'Svg' }))?.props.alt).toBe('Clawd lendo arquivos')
   expect(await band.find({ type: 'Button', key: 'stop:a1' })).toBeDefined()
   await band.unmount()
 
   await $.turn.complete({ agentId: 'a1', reason: 'answer', answer: 'Mapa pronto', durationMs: 900, isAborted: false, turnId: 'u1' })
-  band = await $.ui.mount({ ...BAND, surface: 'desktop' })
-  expect(await band.find({ type: 'Text', text: /Devolveu o resultado/ })).toBeDefined()
-  expect(await band.find({ type: 'Text', text: /^100%$/ })).toBeDefined()
-  expect((await band.find({ type: 'Svg' }))?.props.alt).toBe('Clawd concluído')
+  const done = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  expect(await done.find({ type: 'Text', text: /Devolveu o resultado/ })).toBeDefined()
+  expect(await done.find({ type: 'Text', text: /^100%$/ })).toBeDefined()
+  expect((await done.find({ type: 'Svg' }))?.props.alt).toBe('Clawd concluído')
   // A finished subagent has nothing to stop.
-  expect(await band.find({ type: 'Button', key: 'stop:a1' })).toBeUndefined()
-  await band.unmount()
+  expect(await done.find({ type: 'Button', key: 'stop:a1' })).toBeUndefined()
+  await done.unmount()
 
   // Once its linger is over, a finished subagent leaves the band.
   await clock.advance(20_000)
-  band = await $.ui.mount({ ...BAND, surface: 'terminal' })
-  expect(await band.find({ type: 'Text', text: /^Explore$/ })).toBeUndefined()
-  await band.unmount()
+  const gone = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(await gone.find({ type: 'Text', text: /^Explore$/ })).toBeUndefined()
+  await gone.unmount()
 })
 
 test('the stop button calls TaskStop with the subagent id and ends it', async ($, on) => {

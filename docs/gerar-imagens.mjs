@@ -240,12 +240,59 @@ function terminal() {
   ].join('\n')
 }
 
+/* ---------------- sessões: as outras sessões abertas, abaixo dos subagentes ---------------- */
+
+// Uma linha por sessão paralela, como em register.tsx: Rei Clawd de coroa, o título que o app
+// deu à sessão, modelo, a barra da lista dela (mini Clawd de coroa), %, tokens / janela, tempo,
+// atividade, "N sub" e o Parar, que fica em toda linha.
+const PEER_COLOR = { working: INK.subtle, asking: '#e0b04a', idle: INK.inactive }
+function peerRow(i, x, cy, p) {
+  const at = `y="${cy}" dominant-baseline="central"`
+  const king = clawdSvg(p.kind, true).replace(/^<svg xmlns="http:\/\/www.w3.org\/2000\/svg" width="34" height="(\d+)"/, (_m, h) => `<svg x="${x}" y="${cy - 19}" width="34" height="${h}"`)
+  const w = (p.pct / 100) * BAR
+  return [
+    king,
+    `<text x="${x + 46}" ${at} font-size="13" fill="${INK.text}">${esc(p.name)}</text>`,
+    `<text x="${x + 230}" ${at} font-size="13" fill="${CLAUDE}">${esc(p.model)}</text>`,
+    `<linearGradient id="p${i}" x1="0" x2="1"><stop offset="0" stop-color="${baseColor(CLAUDE_ORANGE, 0.45)}"/><stop offset="1" stop-color="${CLAUDE}"/></linearGradient>`,
+    `<rect x="${x + 304}" y="${cy - 1}" width="${BAR}" height="2" rx="1" fill="#fff" fill-opacity=".07"/>`,
+    `<rect x="${x + 304}" y="${cy - 1}" width="${w}" height="2" rx="1" fill="url(#p${i})"/>`,
+    `<g transform="translate(${x + 304 + Math.max(w, 8)} ${cy + 1})">${miniClawd(CLAUDE, p.status === 'working', true)}</g>`,
+    `<text x="${x + 460}" ${at} font-size="13" fill="${CLAUDE}">${p.pct}%</text>`,
+    `<text x="${x + 590}" ${at} font-size="13" text-anchor="end" fill="${INK.subtle}">${esc(p.tokens)}</text>`,
+    `<text x="${x + 600}" ${at} font-size="13" fill="${INK.subtle}">${esc(p.time)} ·</text>`,
+    `<text x="${x + 658}" ${at} font-size="13" fill="${PEER_COLOR[p.status]}">${esc(p.activity)}</text>`,
+    p.subs ? `<text x="${x + 802}" ${at} font-size="13" text-anchor="end" fill="${INK.subtle}">${p.subs} sub</text>` : '',
+    button(x + 812, cy - 12, '■ Parar', { w: 66, dim: true }),
+  ].join('')
+}
+
+const PEERS = [
+  { kind: 'editando', name: 'Ajustar o card do usage-hud', model: 'Opus 5.5', pct: 63, tokens: '340k / 1M', time: '12:05', activity: 'Edit hooks/card.ts', status: 'working', subs: 2 },
+  { kind: 'parado', name: 'Revisar o README', model: 'Sonnet 5.5', pct: 75, tokens: '80k / 1M', time: '04:12', activity: 'Respondeu há 4min', status: 'idle', subs: 0 },
+]
+
+function sessions() {
+  const W = 960
+  const top = 112
+  const bottom = top + 236
+  const inner = [
+    appChrome(W, top, bottom),
+    header(40, top, W - 40, 'Subagentes · 1 ativo · 41k tokens', false),
+    row(0, 34, top + 48, CREW[0]),
+    `<text x="40" y="${top + 98}" dominant-baseline="central" font-size="13" fill="${INK.subtle}">Sessões em paralelo · 2 abertas · esta é Leitura do handoff anterior</text>`,
+    ...PEERS.map((p, i) => peerRow(i, 34, top + 140 + i * 52, p)),
+  ].join('')
+  return frame(W, bottom + 76, inner, { title: 'A faixa com um subagente e, abaixo, as outras duas sessões abertas, cada uma com o Rei Clawd de coroa, o título da sessão e o botão Parar' })
+}
+
 const out = {
   'assets/faixa-subagentes.svg': band(),
   'assets/faixa-oculta.svg': folded(),
   'assets/progresso-tarefa.svg': progress(),
   'assets/poses-subagente.svg': poses(),
   'assets/terminal-faixa.svg': terminal(),
+  'assets/sessoes-paralelas.svg': sessions(),
 }
 fs.mkdirSync('assets', { recursive: true })
 for (const [path, svg] of Object.entries(out)) {

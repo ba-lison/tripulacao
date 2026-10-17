@@ -52,10 +52,57 @@ export type CrewMember = {
   log: CrewLog[]
 }
 
+// What a session's main loop is doing: a turn under way, a question it waits on the person
+// to answer, or its turn over.
+export type PeerStatus = 'working' | 'asking' | 'idle'
+
+// One session as it writes itself to the shared folder, for the other sessions' bands.
+export type PeerSession = {
+  // The session's id (`$.session.id()`), also the file's name.
+  id: string
+  // The folder it runs in, by its last name, and its first prompt, cut short.
+  project: string
+  title: string
+  // The session's title as the app shows it (the classic hooks' `session_title`); absent
+  // while the app has given it none, and the band falls back to the folder's name.
+  name?: string
+  status: PeerStatus
+  // Its Rei Clawd's pose (a ClawdKind of hooks/clawd.ts), from what its main loop does.
+  pose: string
+  // What its main loop is doing now: the tool and what it points at, or a note.
+  activity: string
+  // The main loop's model, pretty-printed (`Opus 5.5`).
+  model: string
+  // Its subagents running now, and its context: in percent, and in tokens against the window.
+  subagents: number
+  contextPct: number | null
+  tokens: number | null
+  window: number | null
+  // Its own task list (update_plan or TodoWrite), one status per item; null before it keeps one.
+  todos: TodoStatus[] | null
+  // The current turn's start, and its end once it ended.
+  turnStartedAt: number | null
+  turnEndedAt: number | null
+  startedAt: number
+  // When `status` or `activity` last changed, and when the file was last written.
+  changedAt: number
+  updatedAt: number
+  // True while another session's Parar holds it; the others' bands let its row go.
+  halted?: boolean
+  // Set as the session ends; a session that dies without it goes stale instead.
+  endedAt: number | null
+}
+
 declare module 'claude-code' {
   interface PluginState {
     tripulacao: {
       crew: CrewMember[]
+      // This session as it writes itself, and the other sessions alive now.
+      self: PeerSession | null
+      peers: PeerSession[]
+      // Set when another session's band stopped this one: it stays stopped, every tool and
+      // every wake refused, until the person sends a prompt of their own.
+      halted: { at: number; from: string } | null
       now: number
       // The band folded to its header line, or open with a row per subagent.
       bandFolded: boolean

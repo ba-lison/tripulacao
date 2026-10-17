@@ -2,11 +2,11 @@
 
 # tripulação
 
-### Veja cada subagente do Claude Code trabalhando: o que ele está fazendo, quanto da tarefa já andou, quanto contexto usou e há quanto tempo está rodando.
+### Veja cada subagente do Claude Code trabalhando (o que ele está fazendo, quanto da tarefa já andou, quanto contexto usou e há quanto tempo está rodando) e as outras sessões que você tem abertas.
 
 <p>
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-mod-d97757?style=for-the-badge&labelColor=151517">
-  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-2.0.4-2a78d6?style=for-the-badge&labelColor=151517">
+  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-2.6.1-2a78d6?style=for-the-badge&labelColor=151517">
   <img alt="Idioma" src="https://img.shields.io/badge/idioma-PT--BR-e07a5f?style=for-the-badge&labelColor=151517">
   <img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-a1a1a6?style=for-the-badge&labelColor=151517">
 </p>
@@ -15,7 +15,7 @@
 
 <br>
 
-**🦀 Um Clawd por subagente · 📊 Progresso da tarefa · 🧠 Tokens contra a janela · ⏱️ Tempo · ■ Parar**
+**🦀 Um Clawd por subagente · 📊 Progresso da tarefa · 🧠 Tokens contra a janela · ⏱️ Tempo · 👑 Sessões em paralelo · ■ Parar**
 
 </div>
 
@@ -31,6 +31,7 @@ A **tripulação** mostra isso numa faixa logo acima de onde você digita:
 - A **barra de tarefa** acompanha a lista de tarefas do subagente, item por item.
 - Os **tokens** aparecem contra a **janela de contexto real** do modelo daquele subagente.
 - O botão **■ Parar** encerra um subagente sem parar a sessão.
+- As **outras sessões abertas** aparecem logo abaixo, cada uma com o título que o app deu a ela, e também podem ser paradas dali.
 
 <br>
 
@@ -50,7 +51,7 @@ Cada subagente vira uma linha. Da esquerda para a direita:
 | Atividade | `Grep "checkout" em src` | A ferramenta e o alvo: o arquivo, o comando, o padrão ou o site |
 | Parar | `■ Parar` | Encerra só aquele subagente. Some quando ele termina |
 
-O **cabeçalho** conta quantos subagentes estão ativos e soma os tokens de todos. Quem termina fica na faixa por 6 segundos, com a última linha visível, e depois sai. A faixa só aparece quando existe pelo menos um subagente.
+O **cabeçalho** conta quantos subagentes estão ativos e soma os tokens de todos. Quem termina fica na faixa por 6 segundos, com a última linha visível, e depois sai. A faixa só aparece quando existe pelo menos um subagente ou outra sessão aberta.
 
 ### Ocultar e mostrar
 
@@ -129,6 +130,34 @@ O botão **■ Parar** chama o `TaskStop` com o id daquele subagente, como o Cla
 
 <br>
 
+## 👑 Sessões em paralelo
+
+<div align="center">
+  <img src="assets/sessoes-paralelas.svg" alt="A faixa com um subagente e, abaixo, as outras duas sessões abertas: cada uma com o Rei Clawd de coroa, o título da sessão, o modelo, a barra da lista de tarefas dela, os tokens, o tempo, o que está fazendo e o botão Parar" width="900">
+</div>
+
+Com mais de uma sessão do Claude Code aberta, cada faixa mostra **as outras**, abaixo dos subagentes. A sessão em que você está nunca aparece na própria lista.
+
+- O cabeçalho conta as sessões abertas e diz qual é esta: `Sessões em paralelo · 2 abertas · esta é Leitura do handoff anterior`.
+- Cada sessão aparece com o **Rei Clawd de coroa**, na pose do que ela está fazendo, e com as mesmas colunas de um subagente: modelo, barra da lista de tarefas dela, %, tokens contra a janela, tempo da vez atual e atividade. Quando ela tem subagentes rodando, a linha mostra quantos (`2 sub`).
+- O nome é o **título que o app deu à sessão**, o mesmo da barra lateral. Se você renomear a sessão, o nome novo aparece depois da próxima mensagem dela. Enquanto o app ainda não deu título, a linha usa o nome da pasta, com um número pela ordem em que as sessões abriram (`CinePotato 2`).
+- Uma sessão parada mostra `Respondeu há 4min`. Uma sessão fechada sai da faixa em até 35 segundos.
+
+### ■ Parar outra sessão
+
+O **■ Parar** aparece em toda linha de sessão, porque uma sessão entre uma vez e outra ainda pode acordar sozinha com uma tarefa em segundo plano. Em menos de um segundo, a outra sessão:
+
+- interrompe a vez que estiver rodando e para os subagentes dela;
+- recusa qualquer ferramenta e ignora avisos de tarefas em segundo plano;
+- mostra `Parada por <esta sessão>` e sai da sua faixa 6 segundos depois.
+
+Ela fica parada até **você escrever nela**. Aí volta ao normal e reaparece na faixa.
+
+> [!NOTE]
+> Comandos de terminal e Monitors em segundo plano não aparecem na faixa: são processos, não modelos. Subagentes em segundo plano aparecem.
+
+<br>
+
 ## 💻 Funciona no app e no terminal
 
 No **app desktop** (aba Code), cada linha tem o Clawd animado e a barra com o mini Clawd. No **terminal**, a faixa vira texto: um `■` no lugar do Clawd e a barra em traços, com as mesmas colunas e os mesmos botões.
@@ -189,6 +218,12 @@ Não. Ela só observa os eventos e nunca bloqueia uma ferramenta: se algo falhar
 </details>
 
 <details>
+<summary><b>Como a tripulação sabe das outras sessões?</b></summary>
+<br>
+Cada sessão grava um arquivo pequeno com o próprio estado em <code>~/.claude/tripulacao/sessoes/</code> (a cada 3 segundos quando algo muda, e a cada 10 segundos de qualquer jeito) e lê os arquivos das outras. Um arquivo sem atualização há mais de 35 segundos conta como sessão fechada. O pedido de parada também vai por um arquivo nessa pasta. Nada sai do seu computador.
+</details>
+
+<details>
 <summary><b>Preciso do usage-hud?</b></summary>
 <br>
 Não. Os dois mods são independentes. Com os dois instalados, a faixa da tripulação fica logo abaixo do cartão do usage-hud, com um respiro entre eles.
@@ -200,12 +235,14 @@ Não. Os dois mods são independentes. Com os dois instalados, a faixa da tripul
 
 | Arquivo | O que tem |
 |---|---|
-| `hooks/register.tsx` | Os hooks: estado dos subagentes, barra de tarefa, janela de contexto e a faixa |
+| `hooks/register.tsx` | Os hooks: estado dos subagentes e das sessões, barra de tarefa, janela de contexto, Parar e a faixa |
+| `hooks/sessoes.ts` | A pasta comum das sessões: gravar e ler cada sessão, o pedido de parada e os nomes |
 | `hooks/clawd.ts` | O pixel art do Clawd, as poses, o mini Clawd e as cores |
 | `types/index.d.ts` | O contrato do estado que a faixa guarda na sessão |
 | `tests/crew.test.tsx` | Testes da faixa, da barra, das listas e da janela |
+| `tests/sessoes.test.tsx` | Testes das sessões em paralelo, dos nomes e do Parar entre sessões |
 | `docs/gerar-imagens.mjs` | Gera as imagens deste README a partir de `hooks/clawd.ts` |
-| `docs/prototipo/` | O protótipo visual e o desenho antigo dos caranguejos |
+| `docs/prototipo/` | Os protótipos visuais (subagentes e sessões) e o desenho antigo dos caranguejos |
 
 ### ✅ Checklist: editar, testar e publicar
 

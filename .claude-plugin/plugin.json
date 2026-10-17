@@ -1,6 +1,6 @@
 {
   "name": "tripulacao",
-  "version": "2.0.4",
+  "version": "2.6.1",
   "description": "Faixa acima do prompt que mostra cada subagente como um Clawd: a pose do que está fazendo, o progresso da tarefa, os tokens contra a janela do modelo e o tempo.",
   "author": {
     "name": "Alison Cruz"

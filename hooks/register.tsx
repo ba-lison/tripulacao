@@ -1,9 +1,10 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import type { CrewMember, CrewStatus, TodoStatus } from '../types'
-import { CLAUDE, CLAUDE_ORANGE, CLAWD_LABEL, CLAWD_SIZE, baseColor, clawdSvg, miniClawd, toolKind } from './clawd'
+import type { CrewMember, CrewStatus, PeerSession, PeerStatus, TodoStatus } from '../types'
+import { ASKS, CLAUDE, CLAUDE_ORANGE, CLAWD_LABEL, CLAWD_SIZE, baseColor, clawdSvg, miniClawd, toolKind } from './clawd'
 import type { ClawdKind } from './clawd'
+import { HEARTBEAT_MS, PEER_MS, STOP_MS, peersDir, projectOf, readPeers, readStop, requestStop, sessionNames, since, titleFrom, writePeer } from './sessoes'
 
 const TICK_MS = 4000
 const BAND_LINGER_MS = 6000 // a finished subagent stays in the band this long
@@ -13,6 +14,17 @@ const LOG_SIZE = 8
 const crew = atom({ plugin: 'tripulacao', key: 'crew' } as const, [] as CrewMember[])
 const nowAt = atom({ plugin: 'tripulacao', key: 'now' } as const, 0)
 const bandFolded = atom({ plugin: 'tripulacao', key: 'bandFolded' } as const, false)
+const self = atom({ plugin: 'tripulacao', key: 'self' } as const, null as PeerSession | null)
+const peers = atom({ plugin: 'tripulacao', key: 'peers' } as const, [] as PeerSession[])
+const halted = atom({ plugin: 'tripulacao', key: 'halted' } as const, null as { at: number; from: string } | null)
+
+// The subagents the band's Parar stopped: a tool any of them still tries is refused.
+const stoppedAgents = new Set<string>()
+
+// What a refused tool tells the model, so it stops instead of trying again.
+const HALT_TEXT = 'Parado pela Tripulação: o usuário mandou parar. Não use mais ferramentas, não continue a tarefa e encerre a resposta agora.'
+// The tools that end work, which a stopped loop may still run.
+const ENDING_TOOLS = new Set(['TaskStop', 'KillShell'])
 
 const STATUS: Record<CrewStatus, { label: string; color: string }> = {
   working: { label: 'Trabalhando', color: '#e07a5f' },
@@ -224,6 +236,7 @@ async function patch($: EngineInterface, id: string, fn: (m: CrewMember) => Crew
 // The band's stop button: TaskStop ends the subagent's task, as the model would.
 async function stopMember($: EngineInterface, id: string) {
   await patch($, id, m => (m.endedAt === null ? { ...m, tool: null, target: 'Parando…' } : m))
+  stoppedAgents.add(id)
   try {
     await $.tool.call({ tool: 'TaskStop', task_id: id })
   } catch (err) {
@@ -238,19 +251,198 @@ async function stopMember($: EngineInterface, id: string) {
   await update($, nowAt, () => at)
 }
 
+/* ---------------- sessions in parallel ---------------- */
+
+const TITLE_MAX = 60
+
+// `mcp__ccd_turn__update_plan` → `update_plan`: an MCP tool by its own name.
+function toolName(tool: string): string {
+  return tool.startsWith('mcp__') ? tool.split('__').pop() ?? tool : tool
+}
+
+function newSelf(id: string, project: string, at: number): PeerSession {
+  return {
+    id,
+    project,
+    title: '',
+    status: 'idle',
+    pose: 'parado',
+    activity: 'Começando',
+    model: '',
+    subagents: 0,
+    contextPct: null,
+    tokens: null,
+    window: null,
+    todos: null,
+    turnStartedAt: null,
+    turnEndedAt: null,
+    startedAt: at,
+    changedAt: at,
+    updatedAt: 0,
+    endedAt: null,
+  }
+}
+
+// What this session's main loop is doing, for the other sessions' bands.
+async function markMain($: EngineInterface, status: PeerStatus, pose: ClawdKind, activity: string) {
+  const me = await read($, self)
+  if (me === null || (me.status === status && me.pose === pose && me.activity === activity)) return
+  const at = await $.clock.now()
+  await update($, self, p => (p === null ? p : { ...p, status, pose, activity, changedAt: at }))
+}
+
+// How far a list is, as a subagent's: an item under way counts half; 100 only when all are done.
+export function listProgress(todos: readonly TodoStatus[] | null): number | null {
+  if (todos === null || todos.length === 0) return null
+  const score = todos.reduce((s, t) => s + (t === 'completed' ? 1 : t === 'in_progress' ? 0.5 : 0), 0)
+  return Math.round((score / todos.length) * 100)
+}
+
+let lastWrite = 0
+let lastWritten = ''
+// The main loop's running turn, which a stop from another session ends; and the latest stop
+// already acted on, so an old request never ends a later turn.
+let runningTurn: string | null = null
+let lastStopAt = 0
+
+// Stops this session when another session's band asked it to since the last time: its turn ends,
+// its subagents stop, and it stays halted (see `halted`) until the person sends a prompt.
+async function obeyStop($: EngineInterface, dir: string, id: string) {
+  const stop = await readStop($, dir, id)
+  if (stop === null || stop.at <= lastStopAt) return
+  lastStopAt = stop.at
+  await update($, halted, () => ({ at: stop.at, from: stop.from }))
+  if (runningTurn !== null) await $.turn.abort({ turnId: runningTurn }).catch(() => undefined)
+  const agents = await $.agent.list().catch(() => [])
+  for (const a of agents) {
+    if (a.status === 'completed' || a.status === 'failed' || a.status === 'killed') continue
+    stoppedAgents.add(a.id)
+    await $.tool.call({ tool: 'TaskStop', task_id: a.id }).catch(() => undefined)
+  }
+  await markMain($, 'idle', 'interrompido', `Parada por ${stop.from}`).catch(() => undefined)
+  $.ui.toast(`Tripulação: a sessão ${stop.from} parou esta. Ela fica parada até você mandar uma mensagem.`)
+}
+
+// The stop file alone, checked often so a stop lands within half a second.
+async function checkStop($: EngineInterface) {
+  try {
+    const dir = await peersDir($)
+    if (dir === null) return
+    await obeyStop($, dir, await $.session.id())
+  } catch {
+    // the next check tries again
+  }
+}
+
+// The Parar button on another session's row: asks it to stop and shows it stopping meanwhile.
+async function stopPeer($: EngineInterface, peer: PeerSession) {
+  try {
+    const dir = await peersDir($)
+    const me = await read($, self)
+    if (dir === null) throw new Error('sem pasta de sessões')
+    const at = await $.clock.now()
+    await requestStop($, dir, peer.id, { at, from: me?.name || me?.project || 'outra' })
+    await update($, peers, list => list.map(p => (p.id === peer.id ? { ...p, activity: 'Parando…' } : p)))
+  } catch (err) {
+    $.ui.toast(`Tripulação: não consegui pedir a parada (${err instanceof Error ? err.message : String(err)})`)
+  }
+}
+
+// Writes this session's file when it changed, or every HEARTBEAT_MS to say it is alive, then
+// reads the others'. Never throws: a folder it cannot reach only leaves the band without peers.
+async function syncPeers($: EngineInterface) {
+  try {
+    const dir = await peersDir($)
+    if (dir === null) return
+    const at = await $.clock.now()
+    const id = await $.session.id()
+    let me = await read($, self)
+    if (me === null) return
+    // A /clear goes on under a new id: a new session to the others.
+    if (me.id !== id) me = newSelf(id, me.project, at)
+    const list = await read($, crew)
+    const context = await $.session.usage().then(u => u.context, () => null)
+    const model = await $.session.model().then(prettyModel, () => me.model)
+    const next: PeerSession = {
+      ...me,
+      model,
+      subagents: list.filter(m => m.endedAt === null).length,
+      contextPct: context?.percent ?? null,
+      halted: (await read($, halted)) !== null,
+      tokens: context?.tokens ?? null,
+      window: context?.window ?? null,
+    }
+    const key = JSON.stringify({ ...next, updatedAt: 0 })
+    if (key !== lastWritten || at - lastWrite >= HEARTBEAT_MS) {
+      next.updatedAt = at
+      await writePeer($, dir, next)
+      lastWrite = at
+      lastWritten = key
+    }
+    await update($, self, () => next)
+    const found = await readPeers($, dir, id, at)
+    const old = await read($, peers)
+    if (JSON.stringify(found) !== JSON.stringify(old)) await update($, peers, () => found)
+  } catch {
+    // no peers this round
+  }
+}
+
+const PEER_ACT_COLOR: Record<PeerStatus, string> = {
+  working: 'subtle',
+  asking: '#e0b04a',
+  idle: 'inactive',
+}
+
+const POSES = new Set<string>(Object.keys(CLAWD_LABEL))
+
+// A session stopped from a band leaves the others' bands this long after it confirms it,
+// as a finished subagent leaves; it comes back when the person writes in it.
+export function isShown(p: PeerSession, now: number): boolean {
+  const isHalted = p.halted === true || p.activity.startsWith('Parada por')
+  return !isHalted || now - p.changedAt < BAND_LINGER_MS
+}
+
+// The header names this session too when its folder has others, so a band says whose it is.
+function sessoesLabel(n: number, myName?: string): string {
+  return `Sessões em paralelo · ${n} ${n === 1 ? 'aberta' : 'abertas'}${myName ? ` · esta é ${myName}` : ''}`
+}
+
+// A peer's Rei Clawd pose: the one its file names; a file of 2.1.0 names none.
+function poseOf(p: PeerSession): ClawdKind {
+  if (typeof p.pose === 'string' && POSES.has(p.pose)) return p.pose as ClawdKind
+  return p.status === 'idle' ? 'parado' : 'trabalhando'
+}
+
+// The time column: the turn under way so far, or how long the last one took.
+function peerTime(p: PeerSession, now: number): string {
+  const from = p.turnStartedAt ?? null
+  if (from === null) return formatTime(now - p.startedAt)
+  return formatTime((p.status === 'idle' ? p.turnEndedAt ?? now : now) - from)
+}
+
+// What a peer is doing: its activity, or how long ago it answered once its turn is over.
+function peerActivity(p: PeerSession, now: number): string {
+  if (p.status !== 'idle') return p.activity
+  const ago = since(now - p.changedAt)
+  return ago === 'agora' ? p.activity : `${p.activity} há ${ago}`
+}
+
 /* ---------------- SVG pieces ---------------- */
 
 // The task bar, as the usage-hud draws its gauges: a hairline in Claude's orange with a mini
 // Clawd walking at its tip, hopping while the subagent works.
-function taskBar(id: string, pct: number, isHopping: boolean): string {
+function taskBar(id: string, pct: number, isHopping: boolean, isKing = false): string {
   const w = (Math.min(Math.max(pct, 0), 100) / 100) * BAR_WIDTH
+  // A session's mini Clawd wears a crown: 6 px more above the bar.
+  const top = isKing ? 16 : 10
   return [
-    // 8 px past the bar's end and 10 above it: room for the mini Clawd at 100%.
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${BAR_WIDTH + 8}" height="14" viewBox="0 -10 ${BAR_WIDTH + 8} 14">`,
+    // 8 px past the bar's end and `top` above it: room for the mini Clawd at 100%.
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${BAR_WIDTH + 8}" height="${top + 4}" viewBox="0 -${top} ${BAR_WIDTH + 8} ${top + 4}">`,
     `<linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="${baseColor(CLAUDE_ORANGE, 0.45)}"/><stop offset="1" stop-color="${CLAUDE}"/></linearGradient>`,
     `<rect x="0" y="-1" width="${BAR_WIDTH}" height="2" rx="1" fill="#ffffff" fill-opacity=".07"/>`,
     `<rect x="0" y="-1" width="${w}" height="2" rx="1" fill="url(#${id})"/>`,
-    `<g transform="translate(${Math.max(w, 8)} 0)">${miniClawd(CLAUDE, isHopping)}</g>`,
+    `<g transform="translate(${Math.max(w, 8)} 0)">${miniClawd(CLAUDE, isHopping, isKing)}</g>`,
     '</svg>',
   ].join('')
 }
@@ -261,20 +453,105 @@ function bandRows(list: readonly CrewMember[], now: number): CrewMember[] {
   return list.filter(m => m.endedAt === null || now - m.endedAt < BAND_LINGER_MS)
 }
 
+// The title the app gives the session reaches the mods only on the classic events: it names
+// the session in the other bands, and follows a rename at the next prompt.
+async function takeTitle($: EngineInterface, title: unknown): Promise<void> {
+  const name = typeof title === 'string' ? cut(title.replace(/\s+/g, ' ').trim(), TITLE_MAX) : ''
+  const me = await read($, self)
+  if (me !== null && name !== '' && me.name !== name) await update($, self, p => (p === null ? p : { ...p, name }))
+}
+
 /* ---------------- the hooks ---------------- */
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await stamp($)
+    // A reload keeps $.state: the same session keeps its own entry.
+    const [id, cwd, at] = await Promise.all([$.session.id(), $.session.cwd(), $.clock.now()])
+    const me = await read($, self)
+    // An entry an older version kept gets the fields this one added.
+    await update($, self, () => (me === null || me.id !== id ? newSelf(id, projectOf(cwd), at) : { ...newSelf(id, me.project, at), ...me }))
+    lastWritten = ''
+    // A stop asked before this session (or this copy of the mod) started is not for it.
+    lastStopAt = at
+    $.clock.every(PEER_MS, () => void syncPeers($))
+    $.clock.every(STOP_MS, () => void checkStop($))
+    void syncPeers($)
     // The clock only moves while someone is working or has just finished,
     // so an idle session redraws nothing.
     $.clock.every(TICK_MS, () => {
       void (async () => {
         const list = await read($, crew)
         const at = await $.clock.now()
-        if (list.some(m => m.endedAt === null || at - m.endedAt < BAND_LINGER_MS + TICK_MS)) await update($, nowAt, () => at)
+        const others = await read($, peers)
+        const isBusy = list.some(m => m.endedAt === null || at - m.endedAt < BAND_LINGER_MS + TICK_MS)
+        if (isBusy || others.length > 0) await update($, nowAt, () => at)
       })()
     })
+    return next(e)
+  })
+
+  // The session ends: its file says so, and the others drop it at their next read.
+  on('session.end', async ($, e, next) => {
+    try {
+      const me = await read($, self)
+      const dir = await peersDir($)
+      if (me !== null && dir !== null && me.id === e.sessionId) {
+        const at = await $.clock.now()
+        await writePeer($, dir, { ...me, endedAt: at, updatedAt: at })
+      }
+    } catch {
+      // the file goes stale instead
+    }
+    return next(e)
+  })
+
+  // The session's first prompt names it in the other sessions' bands.
+  on('prompt.submit', async ($, e, next) => {
+    // Halted: the person's own prompt lifts it; anything else (a background task's notice, a
+    // peer's message, a schedule) would wake the session, so it is dropped.
+    const halt = await read($, halted)
+    if (halt !== null) {
+      const kind = e.origin?.kind
+      if (kind !== 'composer' && kind !== 'bridge' && kind !== 'sdk') return { drop: `Tripulação: sessão parada por ${halt.from}` }
+      await update($, halted, () => null)
+    }
+    const text = titleFrom(String(e.text ?? ''))
+    const me = await read($, self)
+    if (me !== null && me.title === '' && text !== '') await update($, self, p => (p === null ? p : { ...p, title: cut(text, TITLE_MAX) }))
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
+  // The title the app gives the session: it names it in the other bands (see takeTitle).
+  on('classic.SessionStart', async ($, e, next) => {
+    await takeTitle($, e.session_title)
+    return next(e)
+  }).catch(($, e, next) => next(e))
+  on('classic.UserPromptSubmit', async ($, e, next) => {
+    await takeTitle($, e.session_title)
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
+  // The main loop's turn: working while it runs, waiting for the person once it ends.
+  on('turn.start', async ($, e, next) => {
+    // A turn that starts while halted came from no prompt of the person's: it ends at once.
+    if (e.agentId === undefined && (await read($, halted)) !== null) {
+      const started = await next(e)
+      await $.turn.abort({ turnId: e.turnId }).catch(() => undefined)
+      return started
+    }
+    if (e.agentId === undefined) {
+      runningTurn = e.turnId
+      try {
+        const at = await $.clock.now()
+        const me = await read($, self)
+        // A new turn, unless a question was holding this one.
+        if (me !== null && me.status === 'idle') await update($, self, p => (p === null ? p : { ...p, turnStartedAt: at, turnEndedAt: null }))
+        await markMain($, 'working', 'pensando', 'Pensando…')
+      } catch {
+        // decoration only
+      }
+    }
     return next(e)
   })
 
@@ -326,7 +603,31 @@ export const register: Register = on => {
   // Each tool a subagent runs: what it is doing now, its history, and its task lists.
   on('tool.call', async ($, e, next) => {
     const id = e.agentId
-    if (id === undefined) return next(e)
+    // A stopped session or subagent runs nothing more but the tools that end work.
+    if (!ENDING_TOOLS.has(String(e.tool))) {
+      if ((id !== undefined && stoppedAgents.has(id)) || (await read($, halted)) !== null) return { deny: HALT_TEXT }
+    }
+    if (id === undefined) {
+      const name = String(e.tool)
+      const input = e as unknown as Record<string, unknown>
+      const what = targetOf(name, input)
+      try {
+        // The session's own list: the bar on its row in the other sessions' bands.
+        if (isPlanTool(name)) await update($, self, p => (p === null ? p : { ...p, todos: applyPlan(p.todos, input) }))
+        if (name === 'TodoWrite' && Array.isArray(input.todos)) {
+          const todos = (input.todos as readonly { status?: unknown }[]).map(t => (isTodoStatus(t?.status) ? t.status : 'pending'))
+          await update($, self, p => (p === null ? p : { ...p, todos }))
+        }
+        if (!ASKS.has(name)) await markMain($, 'working', toolKind(name), `${toolName(name)} ${what}`.trim())
+        else await markMain($, 'asking', 'esperando', 'Esperando sua resposta')
+      } catch {
+        // decoration only
+      }
+      if (!ASKS.has(name)) return next(e)
+      const answered = await next(e)
+      await markMain($, 'working', 'pensando', 'Pensando…').catch(() => undefined)
+      return answered
+    }
     const at = await $.clock.now()
     const tool = String(e.tool)
     const input = e as unknown as Record<string, unknown>
@@ -373,7 +674,19 @@ export const register: Register = on => {
   // same id: then it is waiting, not done, and its next turn picks it up again.
   on('turn.complete', async ($, e, next) => {
     const id = e.agentId
-    if (id === undefined) return next(e)
+    if (id === undefined) {
+      runningTurn = null
+      const note = e.reason === 'answer' ? 'Respondeu' : e.reason === 'aborted' ? 'Interrompido' : 'Parou com erro'
+      const pose: ClawdKind = e.reason === 'answer' ? 'parado' : e.reason === 'aborted' ? 'interrompido' : 'erro'
+      try {
+        const at = await $.clock.now()
+        await update($, self, p => (p === null ? p : { ...p, turnEndedAt: at }))
+        await markMain($, 'idle', pose, note)
+      } catch {
+        // decoration only
+      }
+      return next(e)
+    }
     const at = await $.clock.now()
     const info = await $.agent.list().then(all => all.find(a => a.id === id), () => undefined)
     if (info?.status === 'waiting' && e.reason === 'answer') {
@@ -395,7 +708,13 @@ export const register: Register = on => {
     const list = await read($, crew)
     const now = await drawnAt($)
     const rows = bandRows(list, now)
-    if (rows.length === 0) return next(e)
+    const live = await read($, peers)
+    const others = live.filter(p => isShown(p, now))
+    if (rows.length === 0 && others.length === 0) return next(e)
+    const me = await read($, self)
+    // Numbered over every live session, shown or not, so a stopped one leaving renames no other.
+    const names = sessionNames(me === null ? live : [...live, me])
+    const myName = me === null ? undefined : me.name || (names.get(me.id) !== me.project ? names.get(me.id) : undefined)
     const elements = $.ui.resolve(e)
     const { Box, Button, Text } = elements
     // In the text rows, each Clawd and bar is a small SVG of its own: they keep their animation at their own size.
@@ -423,7 +742,9 @@ export const register: Register = on => {
           <Box flexDirection="row" alignItems="center" justifyContent="space-between">
             <Box flexGrow={1} flexShrink={1}>
               <Text color="subtle" wrap="truncate-end">
-                Subagentes · {ativos(active)} · {formatTokens(list.reduce((s, m) => s + m.tokens, 0))} tokens
+                {rows.length > 0
+                  ? `Subagentes · ${ativos(active)} · ${formatTokens(list.reduce((s, m) => s + m.tokens, 0))} tokens`
+                  : sessoesLabel(others.length, myName)}
               </Text>
             </Box>
             <Box flexShrink={0} marginLeft={1}>{foldBand}</Box>
@@ -476,6 +797,60 @@ export const register: Register = on => {
               </Box>
             )
           })}
+          {!isFolded && others.length > 0 && (
+            <Box flexDirection="column" marginTop={1}>
+              {rows.length > 0 && <Text color="subtle">{sessoesLabel(others.length, myName)}</Text>}
+              {others.map((p, i) => {
+                const kind = poseOf(p)
+                const shown = listProgress(p.todos ?? null)
+                const isWorking = p.status === 'working'
+                return (
+                  <Box key={`peer:${p.id}`} flexDirection="row" alignItems="center" marginTop={1}>
+                    {Icon ? (
+                      <Box flexShrink={0} width={5} alignItems="center">
+                        <Icon source={clawdSvg(kind, true)} alt={`Rei Clawd ${CLAWD_LABEL[kind]}`} width={CLAWD_SIZE.width} height={CLAWD_SIZE.height} isInteractive />
+                      </Box>
+                    ) : (
+                      <Box width={2} flexShrink={0}><Text color={CLAUDE}>♛</Text></Box>
+                    )}
+                    <Box width={p.name ? 22 : 13} flexShrink={0}><Text wrap="truncate-end">{p.name || (names.get(p.id) ?? p.project)}</Text></Box>
+                    <Box width={9} flexShrink={0}><Text color={CLAUDE}>{p.model || '—'}</Text></Box>
+                    {Icon ? (
+                      <Box flexShrink={0}>
+                        <Icon source={taskBar(`s${i}`, shown ?? 0, isWorking, true)} alt={shown === null ? 'Sem lista de tarefas' : `${shown}% da lista`} width={BAR_WIDTH + 8} height={20} isInteractive />
+                      </Box>
+                    ) : (
+                      <Box flexShrink={0}>
+                        <Text color={CLAUDE}>{'━'.repeat(Math.round(((shown ?? 0) / 100) * cells))}</Text>
+                        <Text color="inactive">{'─'.repeat(cells - Math.round(((shown ?? 0) / 100) * cells))}</Text>
+                      </Box>
+                    )}
+                    <Box width={5} flexShrink={0} marginLeft={1}><Text color={shown === null ? 'inactive' : CLAUDE}>{shown === null ? '—' : `${shown}%`}</Text></Box>
+                    <Box width={11} flexShrink={0} justifyContent="flex-end">
+                      <Text color="subtle">{p.tokens != null && p.window != null ? `${formatTokens(p.tokens)} / ${formatWindow(p.window)}` : p.contextPct != null ? `ctx ${p.contextPct}%` : '—'}</Text>
+                    </Box>
+                    <Box flexShrink={0} marginLeft={1}>
+                      <Text color="subtle">{`${peerTime(p, now)} ·`}</Text>
+                    </Box>
+                    <Box flexGrow={1} flexShrink={1} marginLeft={1} overflow="hidden">
+                      <Text color={PEER_ACT_COLOR[p.status] ?? 'subtle'} wrap="truncate-end">
+                        {`${cut(peerActivity(p, now), 36)}${p.title && !p.name ? ` · ${titleFrom(p.title)}` : ''}`}
+                      </Text>
+                    </Box>
+                    {p.subagents > 0 && (
+                      <Box flexShrink={0} marginLeft={1}>
+                        <Text color="subtle">{`${p.subagents} sub`}</Text>
+                      </Box>
+                    )}
+                    {/* Always there: a session between turns may still wake on its own background work, and the stop holds it. */}
+                    <Box flexShrink={0} marginLeft={1}>
+                      <Button key={`stop-peer:${p.id}`} label="■ Parar" plain dimColor onPress={() => void stopPeer($, p)} />
+                    </Box>
+                  </Box>
+                )
+              })}
+            </Box>
+          )}
         </Box>
       </Box>
     )

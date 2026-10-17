@@ -65,6 +65,11 @@ const BODY = [
   'eddddddddddd', 'sdddddddddds', '  dddddddd  ', '  ssssssss  ', '  s s  s s  ', '  s s  s s  ',
 ]
 
+// The usage-hud king's crown, the body's first three rows: each session in parallel wears it,
+// since its main loop is a king of its own.
+const CROWN = ['   y yy y   ', '   yyrryy   ', '   YYYYYY   ']
+let isCrowned = false
+
 type Eyes = 'open' | 'up' | 'down' | 'half' | 'happy' | 'angry' | 'dizzy' | 'squint'
 const EYES: Record<Eyes, readonly [string, string]> = {
   open: ['  dkddddkd  ', '  dkddddkd  '],
@@ -93,6 +98,7 @@ function px(rows: readonly string[], dx = 0, dy = 0, sz = 1): string {
 
 function body(eyes: Eyes): string {
   const rows = [...BODY]
+  if (isCrowned) rows.splice(0, 3, ...CROWN)
   rows[4] = EYES[eyes][0]
   rows[5] = EYES[eyes][1]
   return px(rows)
@@ -227,16 +233,23 @@ svg *{transform-box:fill-box}
 // The size in the band's rows: the usage-hud draws the same viewBox at 48 x 46.
 export const CLAWD_SIZE = { width: 34, height: 33 } as const
 
-// The whole drawing for one pose, with its title as the tooltip.
-export function clawdSvg(kind: ClawdKind): string {
+// The whole drawing for one pose, with its title as the tooltip; crowned for a session in parallel.
+export function clawdSvg(kind: ClawdKind, isKing = false): string {
+  isCrowned = isKing
+  const art = ART[kind]()
+  isCrowned = false
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${CLAWD_SIZE.width}" height="${CLAWD_SIZE.height}" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible">`,
-    `<title>Clawd: ${CLAWD_LABEL[kind]}</title>`,
+    `<title>${isKing ? 'Rei Clawd' : 'Clawd'}: ${CLAWD_LABEL[kind]}</title>`,
     `<style>${STYLE}</style>`,
-    ART[kind](),
+    art,
     '</svg>',
   ].join('')
 }
+
+// The mini Clawd at a session's bar tip wears a crown of a few pixels over its head.
+const MINI_CROWN =
+  '<g fill="#ffd34d"><rect x="-4" y="-14" width="2" height="2"/><rect x="-1" y="-15" width="2" height="3"/><rect x="2" y="-14" width="2" height="2"/><rect x="-4" y="-12" width="8" height="1"/></g>'
 
 /* ---------------- the bar ---------------- */
 
@@ -247,7 +260,7 @@ export const CLAUDE = '#d97757'
 export const baseColor = (base: Rgb, alpha: number) => `rgba(${base.join(',')},${alpha})`
 
 // A walking mini Clawd, 16x10, its feet on y=0 and centred on x=0, painted `color`.
-export function miniClawd(color: string, isHopping: boolean): string {
+export function miniClawd(color: string, isHopping: boolean, isKing = false): string {
   const rows = [' cccccc ', ' ckcckc ', 'cccccccc', ' cccccc ']
   let cells = ''
   rows.forEach((line, y) =>
@@ -261,7 +274,7 @@ export function miniClawd(color: string, isHopping: boolean): string {
     ? `<animateTransform attributeName="transform" type="translate" values="0 0;0 -1.5" ${step}/>`
     : `<animateTransform attributeName="transform" type="translate" values="0 0;0 -.6" ${step}/>`
   return [
-    `<g shape-rendering="crispEdges"><g>${hop}${cells}`,
+    `<g shape-rendering="crispEdges"><g>${hop}${isKing ? MINI_CROWN : ''}${cells}`,
     `<g>${legs([1, 3, 5, 7])}<animate attributeName="opacity" values="1;0" ${step}/></g>`,
     `<g opacity="0">${legs([0, 2, 4, 6])}<animate attributeName="opacity" values="0;1" ${step}/></g>`,
     '</g></g>',

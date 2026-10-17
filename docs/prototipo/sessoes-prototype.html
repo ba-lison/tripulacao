@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sessões em paralelo</title>
+<style>
+:root{
+  --page:#141416; --win-edge:#232326; --card:#151517; --card-edge:#2a2a2d; --tile:#1c1c1f;
+  --label:#7c7c82; --figure:#f2f2f5; --detail:#85858b; --faded:#6e6e73; --name:#a1a1a6; --lime:#a3e635; --hint:#4d4d52;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--figure);font:13px/20px Inter,-apple-system,'Segoe UI',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:1000px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:17px;margin:0 0 4px}
+.sub{color:var(--detail);margin:0 0 20px}
+h2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--label);margin:32px 0 10px;font-weight:600}
+.win{background:linear-gradient(#121214,#0a0a0b);border:1px solid var(--win-edge);border-radius:16px;padding:14px 20px 18px;overflow-x:auto}
+.band{min-width:900px;padding:0 8px}
+.band-head{display:flex;align-items:center}
+.band-head .t{flex:1;color:var(--detail)}
+.fold{background:#2a2a2d;color:var(--figure);border:0;border-radius:6px;font:500 12px/24px inherit;font-family:inherit;padding:0 10px}
+.subhead{color:var(--detail);margin-top:18px;padding-top:12px;border-top:1px solid #1f1f22}
+.row{display:flex;align-items:center;margin-top:10px;min-height:33px;white-space:nowrap}
+.row>*{flex-shrink:0}
+.row.today{min-height:20px;margin-top:8px}
+.c-icon{width:40px;display:flex;justify-content:center}
+.c-name{width:80px;color:var(--detail);overflow:hidden;text-overflow:ellipsis}
+.peer-name{color:var(--figure);font-weight:500}
+.c-model{width:72px}
+.c-bar{display:flex}
+.c-pct{width:40px;margin-left:8px;color:#d97757;font-weight:500}
+.c-pct.none{color:var(--hint)}
+.c-tok{width:88px;text-align:right;color:var(--detail)}
+.c-meta{margin-left:8px;color:var(--detail)}
+.c-act{flex:1 1 auto!important;margin-left:8px;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.c-act .title{color:var(--hint)}
+.c-stop{margin-left:8px}
+.plain{background:none;border:0;color:var(--faded);font:inherit;padding:0}
+.subs{margin-left:8px;color:var(--name);background:var(--tile);border:1px solid var(--card-edge);border-radius:999px;padding:0 8px;font-size:12px;line-height:18px}
+.prompt{margin-top:16px;border:1px solid var(--card-edge);background:var(--card);border-radius:12px;padding:10px 16px;color:var(--hint)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.pose{background:#1a1a1d;border:1px solid var(--card-edge);border-radius:10px;padding:10px 6px 8px;text-align:center}
+.pose svg{display:block;margin:0 auto 4px}
+.pose small{display:block;color:var(--lime);font:10px/14px 'JetBrains Mono','Cascadia Code',Consolas,monospace}
+ul{margin:8px 0 0;padding-left:20px;color:var(--detail)}
+li{margin:4px 0}
+li b{color:var(--figure);font-weight:500}
+ol{margin:8px 0 0;padding-left:20px;color:var(--detail)}
+ol li b{color:#e0b04a}
+</style>
+</head>
+<body>
+<main>
+<h1>Sessões em paralelo na faixa</h1>
+<p class="sub">Proposta: cada sessão paralela é um Rei Clawd trabalhando, então ela ganha uma linha igual à dos subagentes, com a coroa.</p>
+
+<h2>Hoje (2.1.0)</h2>
+<div class="win"><div class="band"><div class="band-head"><div class="t">Sessões em paralelo · 3 abertas</div><button class="fold">▾ Ocultar</button></div><div class="row today">
+  <div style="width:16px;color:#e07a5f">●</div>
+  <div style="width:128px;color:#d97757">usage-hud</div>
+  <div style="width:224px;color:var(--detail);overflow:hidden;text-overflow:ellipsis">Ajustar o card que sobrepõe texto</div>
+  <div class="c-act" style="color:var(--detail)">Edit hooks/card.ts</div>
+  <div class="c-meta">2 sub · ctx 34% · 15s</div>
+</div><div class="row today">
+  <div style="width:16px;color:#7c7c82">●</div>
+  <div style="width:128px;color:#d97757">CinePotato</div>
+  <div style="width:224px;color:var(--detail);overflow:hidden;text-overflow:ellipsis">Arrumar a faixa de sessões</div>
+  <div class="c-act" style="color:var(--detail)">Esperando sua resposta</div>
+  <div class="c-meta">ctx 34% · 15s</div>
+</div><div class="row today">
+  <div style="width:16px;color:#7c7c82">●</div>
+  <div style="width:128px;color:#d97757">tripulacao</div>
+  <div style="width:224px;color:var(--detail);overflow:hidden;text-overflow:ellipsis">Revisar o README</div>
+  <div class="c-act" style="color:var(--detail)">Respondeu há 4min</div>
+  <div class="c-meta">ctx 34% · 15s</div>
+</div></div><div class="prompt">Escreva aqui…</div></div>
+
+<h2>Proposta</h2>
+<div class="win"><div class="band"><div class="band-head"><div class="t">Subagentes · 1 ativo · 18k tokens</div><button class="fold">▾ Ocultar</button></div><div class="row">
+  <div class="c-icon"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="33" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Clawd: lendo arquivos</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#d97757"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#d97757"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#d97757"/><rect x="4" y="5" width="1" height="1" fill="#141416"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/><rect class="blink" x="2" y="4" width="8" height="2" fill="#d97757"/></g><rect x="13" y="1.5" width="5" height="7" rx=".3" fill="#f2f2f5"/><rect x="13.7" y="2.6" width="3.4" height=".45" fill="#a1a1a6"/><rect x="13.7" y="3.9" width="2.6" height=".45" fill="#a1a1a6"/><rect x="13.7" y="5.2" width="3.4" height=".45" fill="#a1a1a6"/><rect x="13.7" y="6.5" width="2" height=".45" fill="#a1a1a6"/><g class="scan"><circle cx="14.4" cy="3.4" r="1.25" fill="rgba(96,165,250,.25)" stroke="#c9c9cf" stroke-width=".45"/><path d="M15.3 4.3 L16.8 5.8" stroke="#98533d" stroke-width=".7" stroke-linecap="round"/></g></svg></div>
+  <div class="c-name">Explore</div>
+  <div class="c-model" style="color:#d97757">Haiku 5.5</div>
+  <div class="c-bar"><svg xmlns="http://www.w3.org/2000/svg" width="148" height="20" viewBox="0 -16 148 20"><linearGradient id="s0" x1="0" x2="1"><stop offset="0" stop-color="rgba(217,119,87,0.45)"/><stop offset="1" stop-color="#d97757"/></linearGradient><rect x="0" y="-1" width="140" height="2" rx="1" fill="#ffffff" fill-opacity=".07"/><rect x="0" y="-1" width="70" height="2" rx="1" fill="url(#s0)"/><g transform="translate(70 0)"><g shape-rendering="crispEdges"><g><animateTransform attributeName="transform" type="translate" values="0 0;0 -1.5" dur=".5s" repeatCount="indefinite" calcMode="discrete"/><rect x="-6" y="-10" width="2" height="2" fill="#d97757"/><rect x="-4" y="-10" width="2" height="2" fill="#d97757"/><rect x="-2" y="-10" width="2" height="2" fill="#d97757"/><rect x="0" y="-10" width="2" height="2" fill="#d97757"/><rect x="2" y="-10" width="2" height="2" fill="#d97757"/><rect x="4" y="-10" width="2" height="2" fill="#d97757"/><rect x="-6" y="-8" width="2" height="2" fill="#d97757"/><rect x="-4" y="-8" width="2" height="2" fill="#141416"/><rect x="-2" y="-8" width="2" height="2" fill="#d97757"/><rect x="0" y="-8" width="2" height="2" fill="#d97757"/><rect x="2" y="-8" width="2" height="2" fill="#141416"/><rect x="4" y="-8" width="2" height="2" fill="#d97757"/><rect x="-8" y="-6" width="2" height="2" fill="#d97757"/><rect x="-6" y="-6" width="2" height="2" fill="#d97757"/><rect x="-4" y="-6" width="2" height="2" fill="#d97757"/><rect x="-2" y="-6" width="2" height="2" fill="#d97757"/><rect x="0" y="-6" width="2" height="2" fill="#d97757"/><rect x="2" y="-6" width="2" height="2" fill="#d97757"/><rect x="4" y="-6" width="2" height="2" fill="#d97757"/><rect x="6" y="-6" width="2" height="2" fill="#d97757"/><rect x="-6" y="-4" width="2" height="2" fill="#d97757"/><rect x="-4" y="-4" width="2" height="2" fill="#d97757"/><rect x="-2" y="-4" width="2" height="2" fill="#d97757"/><rect x="0" y="-4" width="2" height="2" fill="#d97757"/><rect x="2" y="-4" width="2" height="2" fill="#d97757"/><rect x="4" y="-4" width="2" height="2" fill="#d97757"/><g><rect x="-6" y="-2" width="2" height="2" fill="#d97757"/><rect x="-2" y="-2" width="2" height="2" fill="#d97757"/><rect x="2" y="-2" width="2" height="2" fill="#d97757"/><rect x="6" y="-2" width="2" height="2" fill="#d97757"/><animate attributeName="opacity" values="1;0" dur=".5s" repeatCount="indefinite" calcMode="discrete"/></g><g opacity="0"><rect x="-8" y="-2" width="2" height="2" fill="#d97757"/><rect x="-4" y="-2" width="2" height="2" fill="#d97757"/><rect x="0" y="-2" width="2" height="2" fill="#d97757"/><rect x="4" y="-2" width="2" height="2" fill="#d97757"/><animate attributeName="opacity" values="0;1" dur=".5s" repeatCount="indefinite" calcMode="discrete"/></g></g></g></g></svg></div>
+  <div class="c-pct">50%</div>
+  <div class="c-tok">18k / 1M</div>
+  <div class="c-meta">00:42 ·</div>
+  <div class="c-act">Read hooks/register.tsx</div>
+  <button class="plain c-stop">■ Parar</button>
+</div><div class="subhead">Sessões em paralelo · 3 abertas</div><div class="row peer" title="Ajustar o card que sobrepõe texto">
+  <div class="c-icon"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="33" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: editando</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#d97757"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#d97757"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#d97757"/><rect x="4" y="5" width="1" height="1" fill="#141416"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/></g><rect x="13" y="1.5" width="5" height="7" rx=".3" fill="#f2f2f5"/><rect class="write" x="13.7" y="2.8" width="3.4" height=".45" fill="#a3e635"/><rect class="write w2" x="13.7" y="4.3" width="2.8" height=".45" fill="#a3e635"/><rect x="13.7" y="5.8" width="3" height=".45" fill="#a1a1a6"/><g class="pen"><rect x="16.6" y="-1.3" width="0.8" height="0.8" fill="#e49d86"/><rect x="15.8" y="-0.5" width="0.8" height="0.8" fill="#ffd34d"/><rect x="15" y="0.3" width="0.8" height="0.8" fill="#ffd34d"/><rect x="14.2" y="1.1" width="0.8" height="0.8" fill="#d9a521"/><rect x="13.4" y="1.9" width="0.8" height="0.8" fill="#141416"/></g></svg></div>
+  <div class="c-name peer-name">usage-hud</div>
+  <div class="c-model" style="color:#d97757">Opus 5.5</div>
+  <div class="c-bar"><svg xmlns="http://www.w3.org/2000/svg" width="148" height="20" viewBox="0 -16 148 20"><linearGradient id="p0" x1="0" x2="1"><stop offset="0" stop-color="rgba(217,119,87,0.45)"/><stop offset="1" stop-color="#d97757"/></linearGradient><rect x="0" y="-1" width="140" height="2" rx="1" fill="#ffffff" fill-opacity=".07"/><rect x="0" y="-1" width="84" height="2" rx="1" fill="url(#p0)"/><g transform="translate(84 0)"><g shape-rendering="crispEdges"><g><g fill="#ffd34d"><rect x="-4" y="-14" width="2" height="2"/><rect x="-1" y="-15" width="2" height="3"/><rect x="2" y="-14" width="2" height="2"/><rect x="-4" y="-12" width="8" height="1"/></g><animateTransform attributeName="transform" type="translate" values="0 0;0 -1.5" dur=".5s" repeatCount="indefinite" calcMode="discrete"/><rect x="-6" y="-10" width="2" height="2" fill="#d97757"/><rect x="-4" y="-10" width="2" height="2" fill="#d97757"/><rect x="-2" y="-10" width="2" height="2" fill="#d97757"/><rect x="0" y="-10" width="2" height="2" fill="#d97757"/><rect x="2" y="-10" width="2" height="2" fill="#d97757"/><rect x="4" y="-10" width="2" height="2" fill="#d97757"/><rect x="-6" y="-8" width="2" height="2" fill="#d97757"/><rect x="-4" y="-8" width="2" height="2" fill="#141416"/><rect x="-2" y="-8" width="2" height="2" fill="#d97757"/><rect x="0" y="-8" width="2" height="2" fill="#d97757"/><rect x="2" y="-8" width="2" height="2" fill="#141416"/><rect x="4" y="-8" width="2" height="2" fill="#d97757"/><rect x="-8" y="-6" width="2" height="2" fill="#d97757"/><rect x="-6" y="-6" width="2" height="2" fill="#d97757"/><rect x="-4" y="-6" width="2" height="2" fill="#d97757"/><rect x="-2" y="-6" width="2" height="2" fill="#d97757"/><rect x="0" y="-6" width="2" height="2" fill="#d97757"/><rect x="2" y="-6" width="2" height="2" fill="#d97757"/><rect x="4" y="-6" width="2" height="2" fill="#d97757"/><rect x="6" y="-6" width="2" height="2" fill="#d97757"/><rect x="-6" y="-4" width="2" height="2" fill="#d97757"/><rect x="-4" y="-4" width="2" height="2" fill="#d97757"/><rect x="-2" y="-4" width="2" height="2" fill="#d97757"/><rect x="0" y="-4" width="2" height="2" fill="#d97757"/><rect x="2" y="-4" width="2" height="2" fill="#d97757"/><rect x="4" y="-4" width="2" height="2" fill="#d97757"/><g><rect x="-6" y="-2" width="2" height="2" fill="#d97757"/><rect x="-2" y="-2" width="2" height="2" fill="#d97757"/><rect x="2" y="-2" width="2" height="2" fill="#d97757"/><rect x="6" y="-2" width="2" height="2" fill="#d97757"/><animate attributeName="opacity" values="1;0" dur=".5s" repeatCount="indefinite" calcMode="discrete"/></g><g opacity="0"><rect x="-8" y="-2" width="2" height="2" fill="#d97757"/><rect x="-4" y="-2" width="2" height="2" fill="#d97757"/><rect x="0" y="-2" width="2" height="2" fill="#d97757"/><rect x="4" y="-2" width="2" height="2" fill="#d97757"/><animate attributeName="opacity" values="0;1" dur=".5s" repeatCount="indefinite" calcMode="discrete"/></g></g></g></g></svg></div>
+  <div class="c-pct">60%</div>
+  <div class="c-tok">340k / 1M</div>
+  <div class="c-meta">12:05 ·</div>
+  <div class="c-act" style="color:var(--detail)">Edit hooks/card.ts<span class="title"> · Ajustar o card que sobrepõe texto</span></div>
+  <span class="subs">2 sub</span>
+</div><div class="row peer" title="Arrumar a faixa de sessões">
+  <div class="c-icon"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="33" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: esperando você</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#141416"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#141416"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#141416"/><rect x="4" y="5" width="1" height="1" fill="#d97757"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/><rect class="blink" x="2" y="4" width="8" height="2" fill="#d97757"/></g><g class="pop"><rect x="11" y="-5.6" width="6" height="5" rx="1.2" fill="#2a2a2d"/><path d="M12 -.8 L11.4 .6 L13.6 -.8 Z" fill="#2a2a2d"/><rect x="12.75" y="-5.1" width="0.85" height="0.85" fill="#ffd34d"/><rect x="13.6" y="-5.1" width="0.85" height="0.85" fill="#ffd34d"/><rect x="14.45" y="-5.1" width="0.85" height="0.85" fill="#ffd34d"/><rect x="14.45" y="-4.25" width="0.85" height="0.85" fill="#ffd34d"/><rect x="13.6" y="-3.4" width="0.85" height="0.85" fill="#ffd34d"/><rect x="14.45" y="-3.4" width="0.85" height="0.85" fill="#ffd34d"/><rect x="13.6" y="-1.7" width="0.85" height="0.85" fill="#ffd34d"/></g></svg></div>
+  <div class="c-name peer-name">CinePotato</div>
+  <div class="c-model" style="color:#d97757">Opus 5.5</div>
+  <div class="c-bar"><svg xmlns="http://www.w3.org/2000/svg" width="148" height="20" viewBox="0 -16 148 20"><linearGradient id="p1" x1="0" x2="1"><stop offset="0" stop-color="rgba(217,119,87,0.45)"/><stop offset="1" stop-color="#d97757"/></linearGradient><rect x="0" y="-1" width="140" height="2" rx="1" fill="#ffffff" fill-opacity=".07"/><rect x="0" y="-1" width="105" height="2" rx="1" fill="url(#p1)"/><g transform="translate(105 0)"><g shape-rendering="crispEdges"><g><g fill="#ffd34d"><rect x="-4" y="-14" width="2" height="2"/><rect x="-1" y="-15" width="2" height="3"/><rect x="2" y="-14" width="2" height="2"/><rect x="-4" y="-12" width="8" height="1"/></g><animateTransform attributeName="transform" type="translate" values="0 0;0 -.6" dur=".5s" repeatCount="indefinite" calcMode="discrete"/><rect x="-6" y="-10" width="2" height="2" fill="#d97757"/><rect x="-4" y="-10" width="2" height="2" fill="#d97757"/><rect x="-2" y="-10" width="2" height="2" fill="#d97757"/><rect x="0" y="-10" width="2" height="2" fill="#d97757"/><rect x="2" y="-10" width="2" height="2" fill="#d97757"/><rect x="4" y="-10" width="2" height="2" fill="#d97757"/><rect x="-6" y="-8" width="2" height="2" fill="#d97757"/><rect x="-4" y="-8" width="2" height="2" fill="#141416"/><rect x="-2" y="-8" width="2" height="2" fill="#d97757"/><rect x="0" y="-8" width="2" height="2" fill="#d97757"/><rect x="2" y="-8" width="2" height="2" fill="#141416"/><rect x="4" y="-8" width="2" height="2" fill="#d97757"/><rect x="-8" y="-6" width="2" height="2" fill="#d97757"/><rect x="-6" y="-6" width="2" height="2" fill="#d97757"/><rect x="-4" y="-6" width="2" height="2" fill="#d97757"/><rect x="-2" y="-6" width="2" height="2" fill="#d97757"/><rect x="0" y="-6" width="2" height="2" fill="#d97757"/><rect x="2" y="-6" width="2" height="2" fill="#d97757"/><rect x="4" y="-6" width="2" height="2" fill="#d97757"/><rect x="6" y="-6" width="2" height="2" fill="#d97757"/><rect x="-6" y="-4" width="2" height="2" fill="#d97757"/><rect x="-4" y="-4" width="2" height="2" fill="#d97757"/><rect x="-2" y="-4" width="2" height="2" fill="#d97757"/><rect x="0" y="-4" width="2" height="2" fill="#d97757"/><rect x="2" y="-4" width="2" height="2" fill="#d97757"/><rect x="4" y="-4" width="2" height="2" fill="#d97757"/><g><rect x="-6" y="-2" width="2" height="2" fill="#d97757"/><rect x="-2" y="-2" width="2" height="2" fill="#d97757"/><rect x="2" y="-2" width="2" height="2" fill="#d97757"/><rect x="6" y="-2" width="2" height="2" fill="#d97757"/><animate attributeName="opacity" values="1;0" dur=".5s" repeatCount="indefinite" calcMode="discrete"/></g><g opacity="0"><rect x="-8" y="-2" width="2" height="2" fill="#d97757"/><rect x="-4" y="-2" width="2" height="2" fill="#d97757"/><rect x="0" y="-2" width="2" height="2" fill="#d97757"/><rect x="4" y="-2" width="2" height="2" fill="#d97757"/><animate attributeName="opacity" values="0;1" dur=".5s" repeatCount="indefinite" calcMode="discrete"/></g></g></g></g></svg></div>
+  <div class="c-pct">75%</div>
+  <div class="c-tok">120k / 1M</div>
+  <div class="c-meta">03:10 ·</div>
+  <div class="c-act" style="color:#e0b04a">Esperando sua resposta<span class="title"> · Arrumar a faixa de sessões</span></div>
+  
+</div><div class="row peer" title="Revisar o README">
+  <div class="c-icon"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="33" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: parado</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#141416"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#141416"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#141416"/><rect x="4" y="5" width="1" height="1" fill="#d97757"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/><rect class="blink" x="2" y="4" width="8" height="2" fill="#d97757"/></g></svg></div>
+  <div class="c-name peer-name">tripulacao</div>
+  <div class="c-model" style="color:#d97757">Sonnet 5.5</div>
+  <div class="c-bar"><svg xmlns="http://www.w3.org/2000/svg" width="148" height="20" viewBox="0 -16 148 20"><linearGradient id="p2" x1="0" x2="1"><stop offset="0" stop-color="rgba(217,119,87,0.45)"/><stop offset="1" stop-color="#d97757"/></linearGradient><rect x="0" y="-1" width="140" height="2" rx="1" fill="#ffffff" fill-opacity=".07"/><rect x="0" y="-1" width="0" height="2" rx="1" fill="url(#p2)"/></svg></div>
+  <div class="c-pct none">—</div>
+  <div class="c-tok">80k / 1M</div>
+  <div class="c-meta">04:12 ·</div>
+  <div class="c-act" style="color:var(--faded)">Respondeu há 4min<span class="title"> · Revisar o README</span></div>
+  
+</div></div><div class="prompt">Escreva aqui…</div></div>
+
+<h2>O que muda em cada linha de sessão</h2>
+<ul>
+<li><b>Rei Clawd com coroa</b> no lugar do ponto, na pose do que a sessão está fazendo (as mesmas poses do rei do usage-hud).</li>
+<li><b>Pasta</b> no lugar do tipo do subagente, em destaque, porque é o que diferencia uma sessão da outra.</li>
+<li><b>Modelo</b> da sessão, em laranja, como nos subagentes.</li>
+<li><b>Barra da lista de tarefas</b> da própria sessão (a lista que aparece embaixo da mensagem no app), com o mini Clawd de coroa na ponta. Sem lista: barra vazia e "—".</li>
+<li><b>Contexto em tokens</b> ("340k / 1M") no lugar do "ctx 34%", no mesmo formato dos subagentes.</li>
+<li><b>Tempo</b> desde que a sessão começou o pedido atual.</li>
+<li><b>Atividade</b> e, depois dela em cinza, o primeiro pedido da sessão (passando o mouse aparece inteiro). Em amarelo quando ela está esperando você.</li>
+<li><b>Subagentes da outra sessão</b> como um selo "2 sub" no fim da linha, no lugar do botão Parar (daqui não dá para parar outra sessão).</li>
+</ul>
+
+<h2>Para você decidir</h2>
+<ol>
+<li><b>Primeiro pedido:</b> fica depois da atividade (como está) ou numa coluna própria?</li>
+<li><b>Mini Clawd de coroa na barra:</b> gosta, ou deixa igual ao dos subagentes?</li>
+<li><b>Sessão parada há muito tempo:</b> continua aparecendo enquanto estiver aberta, ou some depois de uns minutos sem atividade?</li>
+</ol>
+
+<h2>Poses que uma sessão paralela pode ter</h2>
+<div class="grid"><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: pensando</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="tilt"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#d97757"/><rect x="4" y="4" width="1" height="1" fill="#141416"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#141416"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#d97757"/><rect x="4" y="5" width="1" height="1" fill="#d97757"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#d97757"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/></g><rect x="10.5" y="-5.4" width="7" height="3.6" rx="1.2" fill="#2a2a2d"/><path d="M11.4 -1.9 L10.8 -.5 L12.8 -1.9 Z" fill="#2a2a2d"/><circle class="tdot" cx="12.3" cy="-3.6" r=".55" fill="#c9c9cf"/><circle class="tdot d2" cx="14" cy="-3.6" r=".55" fill="#c9c9cf"/><circle class="tdot d3" cx="15.7" cy="-3.6" r=".55" fill="#c9c9cf"/></svg><small>pensando</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: lendo arquivos</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#d97757"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#d97757"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#d97757"/><rect x="4" y="5" width="1" height="1" fill="#141416"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/><rect class="blink" x="2" y="4" width="8" height="2" fill="#d97757"/></g><rect x="13" y="1.5" width="5" height="7" rx=".3" fill="#f2f2f5"/><rect x="13.7" y="2.6" width="3.4" height=".45" fill="#a1a1a6"/><rect x="13.7" y="3.9" width="2.6" height=".45" fill="#a1a1a6"/><rect x="13.7" y="5.2" width="3.4" height=".45" fill="#a1a1a6"/><rect x="13.7" y="6.5" width="2" height=".45" fill="#a1a1a6"/><g class="scan"><circle cx="14.4" cy="3.4" r="1.25" fill="rgba(96,165,250,.25)" stroke="#c9c9cf" stroke-width=".45"/><path d="M15.3 4.3 L16.8 5.8" stroke="#98533d" stroke-width=".7" stroke-linecap="round"/></g></svg><small>lendo arquivos</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: editando</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#d97757"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#d97757"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#d97757"/><rect x="4" y="5" width="1" height="1" fill="#141416"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/></g><rect x="13" y="1.5" width="5" height="7" rx=".3" fill="#f2f2f5"/><rect class="write" x="13.7" y="2.8" width="3.4" height=".45" fill="#a3e635"/><rect class="write w2" x="13.7" y="4.3" width="2.8" height=".45" fill="#a3e635"/><rect x="13.7" y="5.8" width="3" height=".45" fill="#a1a1a6"/><g class="pen"><rect x="16.6" y="-1.3" width="0.8" height="0.8" fill="#e49d86"/><rect x="15.8" y="-0.5" width="0.8" height="0.8" fill="#ffd34d"/><rect x="15" y="0.3" width="0.8" height="0.8" fill="#ffd34d"/><rect x="14.2" y="1.1" width="0.8" height="0.8" fill="#d9a521"/><rect x="13.4" y="1.9" width="0.8" height="0.8" fill="#141416"/></g></svg><small>editando</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: no terminal</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-fast"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#141416"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#141416"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#141416"/><rect x="4" y="5" width="1" height="1" fill="#d97757"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/></g><rect x="12" y="1" width="7" height="6.2" rx=".5" fill="#2a2a2d"/><circle cx="12.6" cy="1.5" r=".2" fill="#e5484d"/><circle cx="13.2" cy="1.5" r=".2" fill="#ffd34d"/><circle cx="13.8" cy="1.5" r=".2" fill="#a3e635"/><rect x="12.4" y="2" width="6.2" height="4.8" fill="#141416"/><rect x="12.8" y="2.5" width="0.4" height="0.4" fill="#a3e635"/><rect x="13.2" y="2.9" width="0.4" height="0.4" fill="#a3e635"/><rect x="12.8" y="3.3" width="0.4" height="0.4" fill="#a3e635"/><rect class="type" x="14" y="2.8" width="3.6" height=".45" fill="#a3e635"/><rect x="12.8" y="4.2" width="4.2" height=".45" fill="#85858b"/><rect class="key-on" x="12.8" y="5.5" width=".6" height=".8" fill="#a3e635"/></svg><small>no terminal</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: na web</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#d97757"/><rect x="4" y="4" width="1" height="1" fill="#141416"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#141416"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#d97757"/><rect x="4" y="5" width="1" height="1" fill="#d97757"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#d97757"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/><rect class="blink" x="2" y="4" width="8" height="2" fill="#d97757"/></g><circle cx="15.5" cy="3.5" r="3" fill="#1d4ed8" stroke="#93c5fd" stroke-width=".35"/><ellipse class="spin" cx="15.5" cy="3.5" rx="1.4" ry="3" fill="none" stroke="#93c5fd" stroke-width=".3"/><path d="M12.5 3.5 H18.5 M13 2 H18 M13 5 H18" stroke="#93c5fd" stroke-width=".25"/></svg><small>na web</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: orquestrando subagents</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#d97757"/><rect x="4" y="4" width="1" height="1" fill="#141416"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#141416"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#d97757"/><rect x="4" y="5" width="1" height="1" fill="#d97757"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#d97757"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/></g><path class="link" d="M15.5 1.6 L12.9 -2.6 M15.5 1.6 L15.5 -2.6 M15.5 1.6 L18.1 -2.6" stroke="#525257" stroke-width=".3" fill="none"/><rect class="agent" x="12.2" y="-4.2" width="1.4" height="1.4" fill="#d97757"/><rect class="agent a2" x="14.8" y="-4.2" width="1.4" height="1.4" fill="#d97757"/><rect class="agent a3" x="17.4" y="-4.2" width="1.4" height="1.4" fill="#d97757"/><rect x="12" y="1.6" width="7" height="5" rx=".4" fill="#2a2a2d"/><rect x="12.6" y="2.2" width="5.8" height="3.6" fill="#141416"/><rect class="screen-line" x="13.1" y="2.7" width="3.4" height=".5" fill="#a3e635"/><rect class="screen-line l2" x="13.1" y="3.8" width="4.4" height=".5" fill="#a3e635"/><rect class="screen-line" x="13.1" y="4.9" width="2.4" height=".5" fill="#a3e635"/><rect x="15" y="6.6" width="1" height=".9" fill="#2a2a2d"/><rect x="13.8" y="7.5" width="3.4" height=".5" rx=".2" fill="#2a2a2d"/></svg><small>orquestrando subagents</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: esperando você</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#141416"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#141416"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#141416"/><rect x="4" y="5" width="1" height="1" fill="#d97757"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/><rect class="blink" x="2" y="4" width="8" height="2" fill="#d97757"/></g><g class="pop"><rect x="11" y="-5.6" width="6" height="5" rx="1.2" fill="#2a2a2d"/><path d="M12 -.8 L11.4 .6 L13.6 -.8 Z" fill="#2a2a2d"/><rect x="12.75" y="-5.1" width="0.85" height="0.85" fill="#ffd34d"/><rect x="13.6" y="-5.1" width="0.85" height="0.85" fill="#ffd34d"/><rect x="14.45" y="-5.1" width="0.85" height="0.85" fill="#ffd34d"/><rect x="14.45" y="-4.25" width="0.85" height="0.85" fill="#ffd34d"/><rect x="13.6" y="-3.4" width="0.85" height="0.85" fill="#ffd34d"/><rect x="14.45" y="-3.4" width="0.85" height="0.85" fill="#ffd34d"/><rect x="13.6" y="-1.7" width="0.85" height="0.85" fill="#ffd34d"/></g></svg><small>esperando você</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: aguardando segundo plano</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#d97757"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#d97757"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#141416"/><rect x="3" y="5" width="1" height="1" fill="#141416"/><rect x="4" y="5" width="1" height="1" fill="#141416"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#141416"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#141416"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/></g><g class="hourglass"><rect x="13" y="1.5" width="0.8" height="0.8" fill="#a1a1a6"/><rect x="13.8" y="1.5" width="0.8" height="0.8" fill="#a1a1a6"/><rect x="14.6" y="1.5" width="0.8" height="0.8" fill="#a1a1a6"/><rect x="15.4" y="1.5" width="0.8" height="0.8" fill="#a1a1a6"/><rect x="16.2" y="1.5" width="0.8" height="0.8" fill="#a1a1a6"/><rect x="13.8" y="2.3" width="0.8" height="0.8" fill="#ffd34d"/><rect x="14.6" y="2.3" width="0.8" height="0.8" fill="#ffd34d"/><rect x="15.4" y="2.3" width="0.8" height="0.8" fill="#ffd34d"/><rect x="14.6" y="3.1" width="0.8" height="0.8" fill="#ffd34d"/><rect x="13.8" y="3.9" width="0.8" height="0.8" fill="#ffd34d"/><rect x="15.4" y="3.9" width="0.8" height="0.8" fill="#ffd34d"/><rect x="13" y="4.7" width="0.8" height="0.8" fill="#a1a1a6"/><rect x="13.8" y="4.7" width="0.8" height="0.8" fill="#a1a1a6"/><rect x="14.6" y="4.7" width="0.8" height="0.8" fill="#a1a1a6"/><rect x="15.4" y="4.7" width="0.8" height="0.8" fill="#a1a1a6"/><rect x="16.2" y="4.7" width="0.8" height="0.8" fill="#a1a1a6"/></g></svg><small>aguardando segundo plano</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: compactando</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="squeeze"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#141416"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#141416"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#d97757"/><rect x="4" y="5" width="1" height="1" fill="#141416"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#141416"/><rect x="8" y="5" width="1" height="1" fill="#d97757"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/></g><path class="arrow" d="M14.2 -3.4 L15.5 -2 L16.8 -3.4 Z" fill="#a3e635"/><rect x="12.6" y="-1.4" width="5.8" height=".8" rx=".2" fill="#a1a1a6"/><g class="squish"><rect x="13" y="0" width="5" height="1.6" fill="#f2f2f5"/><rect x="13" y="2" width="5" height="1.6" fill="#c9c9cf"/><rect x="13" y="4" width="5" height="1.6" fill="#f2f2f5"/><rect x="13" y="6" width="5" height="1.6" fill="#c9c9cf"/></g></svg><small>compactando</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: concluído</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bounce"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#d97757"/><rect x="4" y="4" width="1" height="1" fill="#141416"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#141416"/><rect x="8" y="4" width="1" height="1" fill="#d97757"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#141416"/><rect x="4" y="5" width="1" height="1" fill="#d97757"/><rect x="5" y="5" width="1" height="1" fill="#141416"/><rect x="6" y="5" width="1" height="1" fill="#141416"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/></g><g class="pop"><rect x="16.6" y="-3.6" width="0.9" height="0.9" fill="#a3e635"/><rect x="15.7" y="-2.7" width="0.9" height="0.9" fill="#a3e635"/><rect x="13" y="-1.8" width="0.9" height="0.9" fill="#a3e635"/><rect x="14.8" y="-1.8" width="0.9" height="0.9" fill="#a3e635"/><rect x="13.9" y="-0.9" width="0.9" height="0.9" fill="#a3e635"/></g><path class="spark" d="M-.6 0 L0 .8 L.6 0 L0 -.8 Z" fill="#ffd34d"/><path class="spark s2" d="M12 5 L12.4 5.6 L12.8 5 L12.4 4.4 Z" fill="#ffd34d"/></svg><small>concluído</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: parado</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g class="bob-slow"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#141416"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#141416"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#d97757"/><rect x="3" y="5" width="1" height="1" fill="#141416"/><rect x="4" y="5" width="1" height="1" fill="#d97757"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#d97757"/><rect x="8" y="5" width="1" height="1" fill="#141416"/><rect x="9" y="5" width="1" height="1" fill="#d97757"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/><rect class="blink" x="2" y="4" width="8" height="2" fill="#d97757"/></g></svg><small>parado</small></div><div class="pose"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" viewBox="-1 -6 20 19" shape-rendering="crispEdges" overflow="visible"><title>Rei Clawd: erro</title><style>
+svg *{transform-box:fill-box}
+.bob-slow{animation:bob 2.6s ease-in-out infinite}
+.bob-fast{animation:bobFast .32s steps(1) infinite}
+.bounce{animation:bounce .6s ease-in-out infinite}
+.shake{animation:shake .24s steps(2) infinite}
+.tilt{transform-origin:50% 100%;animation:tilt 3s ease-in-out infinite}
+.squeeze{transform-origin:50% 100%;animation:squeeze 1.6s ease-in-out infinite}
+.blink{animation:blink 4.2s linear infinite;opacity:0}
+.key-on{animation:keyOn .9s steps(1) infinite}.k2{animation-delay:.3s}.k3{animation-delay:.6s}
+.tdot{animation:tdot 1.2s ease-in-out infinite;opacity:.3}.d2{animation-delay:.2s}.d3{animation-delay:.4s}
+.scan{animation:scan 2.4s ease-in-out infinite}
+.write{transform-origin:0 50%;animation:write 2.4s steps(6) infinite}.w2{animation-delay:1.2s}
+.pen{animation:pen 2.4s linear infinite}
+.type{transform-origin:0 50%;animation:write 1.2s steps(5) infinite}
+.spin{transform-origin:50% 50%;animation:spin 1.6s linear infinite}
+.agent{animation:agent 1.8s steps(1) infinite}.a2{animation-delay:.6s}.a3{animation-delay:1.2s}
+.screen-line{animation:flick .5s steps(1) infinite}.l2{animation-delay:.25s}
+.link{stroke-dasharray:.6 .6;animation:dash .8s linear infinite}
+.pop{transform-origin:30% 100%;animation:pop 1.6s ease-in-out infinite}
+.hourglass{transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+.squish{transform-origin:50% 100%;animation:squish 1.6s ease-in-out infinite}
+.arrow,.alarm{animation:keyOn .8s steps(1) infinite}
+.spark{transform-origin:50% 50%;animation:twinkle 1.4s ease-in-out infinite;opacity:0}.s2{animation-delay:.5s}
+.drop{animation:drop 1.6s ease-in infinite;opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.8px)}}
+@keyframes bobFast{0%{transform:translateY(0)}50%{transform:translateY(-.5px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes shake{0%{transform:translateX(-.4px)}50%{transform:translateX(.4px)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,60%{transform:rotate(-5deg)}}
+@keyframes squeeze{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.92)}}
+@keyframes blink{0%,93%{opacity:0}95%,97%{opacity:1}99%,100%{opacity:0}}
+@keyframes keyOn{0%{opacity:1}50%{opacity:0}}
+@keyframes tdot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-.4px)}}
+@keyframes scan{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,0)}50%{transform:translate(1.6px,2.6px)}75%{transform:translate(0,2.6px)}}
+@keyframes write{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes pen{0%{transform:translate(0,0)}45%{transform:translate(3px,0)}50%{transform:translate(0,1.5px)}95%{transform:translate(2.6px,1.5px)}100%{transform:translate(0,0)}}
+@keyframes spin{0%{transform:scaleX(1)}50%{transform:scaleX(.1)}100%{transform:scaleX(1)}}
+@keyframes agent{0%{opacity:.25}33%{opacity:1}66%,100%{opacity:.25}}
+@keyframes flick{0%{opacity:1}50%{opacity:.2}}
+@keyframes dash{to{stroke-dashoffset:-1.2}}
+@keyframes pop{0%,100%{transform:scale(1)}10%{transform:scale(1.15)}20%{transform:scale(1)}}
+@keyframes flip{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+@keyframes squish{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+@keyframes drop{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(5px)}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}</style><g transform="translate(0 .5)"><rect x="3" y="0" width="1" height="1" fill="#ffd34d"/><rect x="5" y="0" width="1" height="1" fill="#ffd34d"/><rect x="6" y="0" width="1" height="1" fill="#ffd34d"/><rect x="8" y="0" width="1" height="1" fill="#ffd34d"/><rect x="3" y="1" width="1" height="1" fill="#ffd34d"/><rect x="4" y="1" width="1" height="1" fill="#ffd34d"/><rect x="5" y="1" width="1" height="1" fill="#e5484d"/><rect x="6" y="1" width="1" height="1" fill="#e5484d"/><rect x="7" y="1" width="1" height="1" fill="#ffd34d"/><rect x="8" y="1" width="1" height="1" fill="#ffd34d"/><rect x="3" y="2" width="1" height="1" fill="#d9a521"/><rect x="4" y="2" width="1" height="1" fill="#d9a521"/><rect x="5" y="2" width="1" height="1" fill="#d9a521"/><rect x="6" y="2" width="1" height="1" fill="#d9a521"/><rect x="7" y="2" width="1" height="1" fill="#d9a521"/><rect x="8" y="2" width="1" height="1" fill="#d9a521"/><rect x="2" y="3" width="1" height="1" fill="#d97757"/><rect x="3" y="3" width="1" height="1" fill="#d97757"/><rect x="4" y="3" width="1" height="1" fill="#d97757"/><rect x="5" y="3" width="1" height="1" fill="#d97757"/><rect x="6" y="3" width="1" height="1" fill="#d97757"/><rect x="7" y="3" width="1" height="1" fill="#d97757"/><rect x="8" y="3" width="1" height="1" fill="#d97757"/><rect x="9" y="3" width="1" height="1" fill="#d97757"/><rect x="2" y="4" width="1" height="1" fill="#d97757"/><rect x="3" y="4" width="1" height="1" fill="#d97757"/><rect x="4" y="4" width="1" height="1" fill="#d97757"/><rect x="5" y="4" width="1" height="1" fill="#d97757"/><rect x="6" y="4" width="1" height="1" fill="#d97757"/><rect x="7" y="4" width="1" height="1" fill="#d97757"/><rect x="8" y="4" width="1" height="1" fill="#d97757"/><rect x="9" y="4" width="1" height="1" fill="#d97757"/><rect x="2" y="5" width="1" height="1" fill="#141416"/><rect x="3" y="5" width="1" height="1" fill="#d97757"/><rect x="4" y="5" width="1" height="1" fill="#141416"/><rect x="5" y="5" width="1" height="1" fill="#d97757"/><rect x="6" y="5" width="1" height="1" fill="#d97757"/><rect x="7" y="5" width="1" height="1" fill="#141416"/><rect x="8" y="5" width="1" height="1" fill="#d97757"/><rect x="9" y="5" width="1" height="1" fill="#141416"/><rect x="0" y="6" width="1" height="1" fill="#e49d86"/><rect x="1" y="6" width="1" height="1" fill="#d97757"/><rect x="2" y="6" width="1" height="1" fill="#d97757"/><rect x="3" y="6" width="1" height="1" fill="#d97757"/><rect x="4" y="6" width="1" height="1" fill="#d97757"/><rect x="5" y="6" width="1" height="1" fill="#d97757"/><rect x="6" y="6" width="1" height="1" fill="#d97757"/><rect x="7" y="6" width="1" height="1" fill="#d97757"/><rect x="8" y="6" width="1" height="1" fill="#d97757"/><rect x="9" y="6" width="1" height="1" fill="#d97757"/><rect x="10" y="6" width="1" height="1" fill="#d97757"/><rect x="11" y="6" width="1" height="1" fill="#d97757"/><rect x="0" y="7" width="1" height="1" fill="#98533d"/><rect x="1" y="7" width="1" height="1" fill="#d97757"/><rect x="2" y="7" width="1" height="1" fill="#d97757"/><rect x="3" y="7" width="1" height="1" fill="#d97757"/><rect x="4" y="7" width="1" height="1" fill="#d97757"/><rect x="5" y="7" width="1" height="1" fill="#d97757"/><rect x="6" y="7" width="1" height="1" fill="#d97757"/><rect x="7" y="7" width="1" height="1" fill="#d97757"/><rect x="8" y="7" width="1" height="1" fill="#d97757"/><rect x="9" y="7" width="1" height="1" fill="#d97757"/><rect x="10" y="7" width="1" height="1" fill="#d97757"/><rect x="11" y="7" width="1" height="1" fill="#98533d"/><rect x="2" y="8" width="1" height="1" fill="#d97757"/><rect x="3" y="8" width="1" height="1" fill="#d97757"/><rect x="4" y="8" width="1" height="1" fill="#d97757"/><rect x="5" y="8" width="1" height="1" fill="#d97757"/><rect x="6" y="8" width="1" height="1" fill="#d97757"/><rect x="7" y="8" width="1" height="1" fill="#d97757"/><rect x="8" y="8" width="1" height="1" fill="#d97757"/><rect x="9" y="8" width="1" height="1" fill="#d97757"/><rect x="2" y="9" width="1" height="1" fill="#98533d"/><rect x="3" y="9" width="1" height="1" fill="#98533d"/><rect x="4" y="9" width="1" height="1" fill="#98533d"/><rect x="5" y="9" width="1" height="1" fill="#98533d"/><rect x="6" y="9" width="1" height="1" fill="#98533d"/><rect x="7" y="9" width="1" height="1" fill="#98533d"/><rect x="8" y="9" width="1" height="1" fill="#98533d"/><rect x="9" y="9" width="1" height="1" fill="#98533d"/><rect x="2" y="10" width="1" height="1" fill="#98533d"/><rect x="4" y="10" width="1" height="1" fill="#98533d"/><rect x="7" y="10" width="1" height="1" fill="#98533d"/><rect x="9" y="10" width="1" height="1" fill="#98533d"/><rect x="2" y="11" width="1" height="1" fill="#98533d"/><rect x="4" y="11" width="1" height="1" fill="#98533d"/><rect x="7" y="11" width="1" height="1" fill="#98533d"/><rect x="9" y="11" width="1" height="1" fill="#98533d"/></g><g class="alarm"><rect x="13.5" y="-4.5" width="0.9" height="0.9" fill="#e5484d"/><rect x="13.5" y="-3.6" width="0.9" height="0.9" fill="#e5484d"/><rect x="13.5" y="-2.7" width="0.9" height="0.9" fill="#e5484d"/><rect x="13.5" y="-0.9" width="0.9" height="0.9" fill="#e5484d"/></g></svg><small>erro</small></div></div>
+</main>
+</body>
+</html>
